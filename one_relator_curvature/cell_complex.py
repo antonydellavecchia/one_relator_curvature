@@ -1,5 +1,4 @@
-import math as m
-import cmath as c
+import numpy as np
 
 # 0 - cells that arise from an intersection of segments
 # hence the point lies in the fundamental domain
@@ -17,7 +16,7 @@ class ZeroCell:
         # order segments by order of appearance while follow geodesic in universal
         # cover starting from point in fundamental domain
         # may be better to compare with angles if geodesic is large
-        if c.phase(lift1) > c.phase(lift2):
+        if np.angle(lift1) > np.angle(lift2):
             self.lifts = (lift1, lift2)
             self.segments = (segment1, segment2) 
 
@@ -85,7 +84,8 @@ class HalfEdge:
 # links are the graphs at zero-cells:
 # we assume no triple intersections
 class Link:
-    def __init__(self):
+    def __init__(self, zero_cell=None):
+        self.zero_cell = zero_cell
         self.link_map = {
             (-1, 0): [],
             (0, 1): [],
@@ -107,8 +107,9 @@ class Link:
 
         return num_vertices - num_edges
             
-    def full_link(self, zero_cell, label, removed_region):
+    def full_link(self,label, removed_region):
         # keys are vertices values are list of edges at vertex
+        zero_cell = self.zero_cell
         vertices = list(self.link_map.keys())
         initial_half_edge = zero_cell.half_edges[0]
         current_half_edge = initial_half_edge.nxt.flip
@@ -269,6 +270,7 @@ class CellComplex:
                 next_half_edge = half_edge.nxt
 
                 while(next_half_edge.label != initial_label):
+                    print(next_half_edge.label, initial_label)
                     region.add_half_edge(next_half_edge)
                     next_half_edge.belongs_to(region)
                     next_half_edge = next_half_edge.nxt
