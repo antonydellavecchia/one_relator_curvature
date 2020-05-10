@@ -10,7 +10,8 @@ torus_fundamental_domain = Domain(bounds)
 
 punctured_torus = {
     'fundamental_domain': torus_fundamental_domain,
-    'initial_point': N(-0.5 + 0.5j, 10),
+    #'initial_point': N(-0.5 + 0.5j, 10),
+    'initial_point': -0.5 + 0.5j,
     'mobius_transformations': {
         'a': np.array([[1, 1], [1, 2]]), 
         'b': np.array([[1, -1], [-1, 2]]),
