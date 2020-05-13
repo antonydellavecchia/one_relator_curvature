@@ -4,7 +4,8 @@ import numpy as np
 # hence the point lies in the fundamental domain
 # they can also be identified by the list of halfedges that point to them
 class ZeroCell:
-    def __init__(self, segment1, segment2, point):
+    def __init__(self, segment1, segment2, point, label):
+        self.label = label
         self.point = point
         self.index = (None, None)
         self.half_edges = []
@@ -113,6 +114,7 @@ class Link:
         vertices = list(self.link_map.keys())
         initial_half_edge = zero_cell.half_edges[0]
         current_half_edge = initial_half_edge.nxt.flip
+        current_half_edge.zero_cell_label = zero_cell.label
         count = 0
         remove_labels = removed_region.get_labels()
 
@@ -135,6 +137,7 @@ class Link:
                 self.link_map[vertex2].append(edge)
 
             current_half_edge = current_half_edge.nxt.flip
+            current_half_edge.zero_cell_label = zero_cell.label
             count += 1
 
         # get last edge
@@ -255,6 +258,8 @@ class Region:
     def get_labels(self):
         return [half_edge.label for half_edge in self.half_edges]
 
+    def get_vertices(self):
+        return list(map(lambda x: x.zero_cell_label, self.half_edges))
 
 class CellComplex:
     def __init__(self, half_edges):
@@ -270,7 +275,7 @@ class CellComplex:
                 next_half_edge = half_edge.nxt
 
                 while(next_half_edge.label != initial_label):
-                    print(next_half_edge.label, initial_label)
+                    #print(next_half_edge.label, initial_label)
                     region.add_half_edge(next_half_edge)
                     next_half_edge.belongs_to(region)
                     next_half_edge = next_half_edge.nxt

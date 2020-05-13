@@ -3,6 +3,7 @@ from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.example import Example
 import matplotlib.pyplot as plt
 import random
+from functools import reduce
 
 def generate_word(size):
     word = 'B'
@@ -42,6 +43,7 @@ class Sample:
         self.sample_size = sample_size
         self.word_size = word_size
         self.surface = surface
+        self.stats = []
 
     def generate_words(self):
         words = []
@@ -59,6 +61,10 @@ class Sample:
 
             if example.is_valid():
                 self.example_geodesics.append(example.universal_geodesic)
+                self.stats.append([example.first_betti_number(),
+                                   example.curvature,
+                                   example.region_stats()
+                                   ])
 
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()
@@ -67,10 +73,19 @@ class Sample:
         hyperbolic_plane.geodesics.extend(self.example_geodesics)
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()
+
+        region_over_betti = list(map(lambda x: (x[0] - x[2]) / x[0], self.stats))
+        curvature = list(map(lambda x: x[1], self.stats))
+        fig = plt.figure(3)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.scatter(region_over_betti, curvature)
+        ax.axis([-5, 5, 0, 10])
+        
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(20**2, 20)
+    sample = Sample(10, 20)
     sample.generate_words()
     sample.run_examples()
     sample.plot()
+

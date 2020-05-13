@@ -75,7 +75,8 @@ class Example:
                     # verifies intersection is in fundamental domain
                     if lowerBound < intersection[0] * orient < upperBound:
                         z = intersection[0] + 1j * intersection[1]
-                        zero_cell = ZeroCell(segments[i], segments[j], z)
+                        num_zero_cells = len(zero_cells.values()) // 2
+                        zero_cell = ZeroCell(segments[i], segments[j], z, num_zero_cells)
                         zero_cells[zero_cell.lifts[0]] = zero_cell
                         zero_cells[zero_cell.lifts[1]] = zero_cell
 
@@ -329,6 +330,9 @@ class Example:
         angles = list(map(lambda x: x.varValue, prob.variables()))
         self.angle_assignments = dict(zip(angle_labels, angles))
 
+    def first_betti_number(self):
+        return len(self.links) + 1
+
     def set_vertex_weights(self):
         points = list(map(lambda x: x.zero_cell.point, self.links))
         labels = list(map(lambda x: x.get_labels(), self.links))
@@ -337,11 +341,16 @@ class Example:
         
         #print(dict(zip(points, weights)))
 
+    def region_stats(self):
+        region_vertices = list(map(lambda x: x.get_vertices(), self.regions))
+        region_sizes = list(map(lambda x: len(set(x)), region_vertices))
+        return max(region_sizes) 
+        
     def run(self):
         print(f"***** running example {self.word.word} *****")
         print('generating cell complex')
         self.generate_cell_complex()
-        self.plot()
+
         print("Example is valid:", self.is_valid())
 
         if self.is_valid == False:
@@ -353,8 +362,9 @@ class Example:
         print('assigning')
         self.set_vertex_weights()
 
+        print(self.region_stats())
         print("Example curvature:", self.curvature)
-
+        print("First betti number:", self.first_betti_number())
         if self.curvature > 0:
             self.universal_geodesic.color = 'red'
         else:
@@ -362,14 +372,14 @@ class Example:
 
         
 if __name__ == '__main__':
-    #example = Example('BBBAA', surface=punctured_torus)
+    example = Example('BBBAA', surface=punctured_torus)
     #example = Example('BBABa', surface=punctured_torus)
     #example = Example('BBAba', surface=punctured_torus)
     #example = Example('BabbaBBaBaa', surface=punctured_torus)
     #example = Example('BBABBaabAbaaBBaBaaBaB', surface=punctured_torus)
 
-    #example = Example('BABBABABAB', surface=punctured_torus)
-    example = Example('BABABBAb', surface=punctured_torus)
+    example = Example('BABBABABAB', surface=punctured_torus)
+    #example = Example('BABABBAb', surface=punctured_torus)
     
     example.run()
     #example.plot()
