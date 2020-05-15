@@ -36,11 +36,12 @@ def generate_word(size):
 
 
 class Sample:
-    def __init__(self, sample_size, word_size, surface=punctured_torus):
+    def __init__(self, sample_size, word_size, surface=punctured_torus, curvature_threshold=0):
         """
 
         """
         self.sample_size = sample_size
+        self.curvature_threshold = curvature_threshold
         self.word_size = word_size
         self.surface = surface
         self.stats = []
@@ -56,15 +57,22 @@ class Sample:
         self.example_geodesics = []
 
         for word in self.words:
-            example = Example(word)
+            example = Example(word, curvature_threshold=self.curvature_threshold)
             example.run()
 
             if example.is_valid():
                 self.example_geodesics.append(example.universal_geodesic)
+
                 self.stats.append([example.first_betti_number(),
                                    example.curvature,
                                    example.region_stats()
                                    ])
+
+                if example.curvature < self.curvature_threshold:
+                    self.passed.append(example)
+                else:
+                    self.failed.append(example)
+
 
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()
@@ -84,7 +92,7 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(10, 20)
+    sample = Sample(10**2, 12, curvature_threshold=0.5)
     sample.generate_words()
     sample.run_examples()
     sample.plot()

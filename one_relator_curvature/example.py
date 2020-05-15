@@ -5,11 +5,12 @@ from one_relator_curvature.cell_complex import *
 import matplotlib.pyplot as plt
 
 class Example:
-    def __init__(self, word, surface=punctured_torus):
+    def __init__(self, word, surface=punctured_torus, curvature_threshold=0):
         """
         
         """
         mobius_transformations = surface['mobius_transformations']
+        self.curvature_threshold = curvature_threshold
         self.word = Word(word, mobius_transformations)
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
@@ -365,7 +366,7 @@ class Example:
         print(self.region_stats())
         print("Example curvature:", self.curvature)
         print("First betti number:", self.first_betti_number())
-        if self.curvature > 0:
+        if self.curvature > self.curvature_threshold:
             self.universal_geodesic.color = 'red'
         else:
             self.universal_geodesic.color = 'green'
