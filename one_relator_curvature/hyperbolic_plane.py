@@ -6,75 +6,8 @@ import copy
 from itertools import combinations_with_replacement
 from functools import reduce
 from one_relator_curvature.circle_intersection import Geometry
+from one_relator_curvature.utils import *
 
-def disc_to_upper(z):
-    if z == 1:
-        return np.inf
-
-    return ((z + 1) * 1j) / (1 - z)
-    
-def upper_to_disc(z):
-    if z == np.inf:
-        return 1 + 0j
-    
-    return (z - 1j) / (z + 1j)
-
-def complex_to_vector(z):
-    return np.array([z.real, z.imag])
-
-def mobius(a, z):
-    if z == np.inf:
-        return a[0][0] * (1.0 / a[1][0])
-
-    elif a[1][0] * z + a[1][1] == 0:
-        return np.inf
-    
-    return (a[0][0] * z + a[0][1]) / (a[1][0] * z + a[1][1])
-
-def inverseLetter(letter):
-    if letter.isupper():
-        return letter.lower()
-    else:
-        return letter.upper()
-    
-def word_inverse(word):
-    inverseWord = ''
-
-    for letter in reversed(word):
-        inverseWord = inverseWord + inverseLetter(letter)
-    return inverseWord
-
-def get_arc(center, points):
-    angles_roots = list(map(lambda x: np.angle(x - center, deg=True), points))
-    angles_roots.sort()
-    theta1, theta2 = angles_roots
-
-    if abs(theta1 - theta2) > 180:
-        theta2, theta1 = theta1, theta2
-
-    return [theta1, theta2]
-
-class Word:
-    def __init__(self, word, matrices):
-        self.word = word
-        self.matrices = matrices
-        self.inverse = word_inverse(word)
-
-    # transforms point by word
-    def transformation(self, z):
-        for element in reversed(self.word):
-            matrix = self.matrices[element]
-            z = mobius(matrix, z)
-            
-        return z
-
-    # transform point by inverse of word
-    def inverse_transformation(self, z):
-        for element in reversed(self.inverse):
-            matrix = self.matrices[element]
-            z = mobius(matrix, z)
-        return z
-    
 class HyperbolicPlane:
     def __init__(self):
         """

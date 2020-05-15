@@ -1,6 +1,7 @@
 from one_relator_curvature.hyperbolic_plane import *
 from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.example import Example
+from one_relator_curvature.word import Word
 import matplotlib.pyplot as plt
 import random
 from functools import reduce
@@ -34,7 +35,6 @@ def generate_word(size):
         prev_char = new_char
     return word
 
-
 class Sample:
     def __init__(self, sample_size, word_size, surface=punctured_torus, curvature_threshold=0):
         """
@@ -45,7 +45,9 @@ class Sample:
         self.word_size = word_size
         self.surface = surface
         self.stats = []
-
+        self.passed = []
+        self.failed =[]
+        
     def generate_words(self):
         words = []
         for _ in range(self.sample_size):
@@ -92,8 +94,15 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(10**2, 12, curvature_threshold=0.5)
+    sample = Sample(12**2, 12, curvature_threshold=0.5)
     sample.generate_words()
     sample.run_examples()
+    passed_words = list(map(lambda x: x.word.get_equivalence_class() , sample.passed))
+    refined_passed_words = set()
+
+    for passed_word in passed_words:
+        refined_passed_words = refined_passed_words.union(set(passed_word))
+        
+    print(sum(map(lambda x: len(passed_word), passed_words)) - len(refined_passed_words))
     sample.plot()
 

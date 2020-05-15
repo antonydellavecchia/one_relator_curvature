@@ -1,7 +1,8 @@
 from pulp import *
 from one_relator_curvature.hyperbolic_plane import *
 from one_relator_curvature.punctured_surfaces import *
-from one_relator_curvature.cell_complex import * 
+from one_relator_curvature.cell_complex import *
+from one_relator_curvature.word import Word
 import matplotlib.pyplot as plt
 
 class Example:
