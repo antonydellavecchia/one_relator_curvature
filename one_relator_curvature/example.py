@@ -374,14 +374,17 @@ class Example:
 
         
 if __name__ == '__main__':
-    example = Example('BBBAA', surface=punctured_torus)
+    #example = Example('BBBAA', surface=punctured_torus)
     #example = Example('BBABa', surface=punctured_torus)
     #example = Example('BBAba', surface=punctured_torus)
     #example = Example('BabbaBBaBaa', surface=punctured_torus)
     #example = Example('BBABBaabAbaaBBaBaaBaB', surface=punctured_torus)
 
-    example = Example('BABBABABAB', surface=punctured_torus)
+    #example = Example('BABBABABAB', surface=punctured_torus)
+    #example = Example('BBABabAAA')
+    example = Example('BBaBAbaa') #important
+    #example = Example('BAAbbaaBBA')
     #example = Example('BABABBAb', surface=punctured_torus)
     
     example.run()
-    #example.plot()
+    example.plot()
