@@ -12,14 +12,14 @@ class Example:
         """
         mobius_transformations = surface['mobius_transformations']
         self.curvature_threshold = curvature_threshold
-        self.word = Word(word, mobius_transformations)
+        self.word = Word(word[1:], mobius_transformations)
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
         self.path_start = surface['initial_point']
         identified_start = mobius(mobius_transformations['B'], self.path_start)
 
         # maps start point to point on B inverse side and then map by word to get endpoint
-        self.path_end = self.word.transformation(identified_start) #identified_start)
+        self.path_end = self.word.transformation(identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
 
 
@@ -382,9 +382,12 @@ if __name__ == '__main__':
 
     #example = Example('BABBABABAB', surface=punctured_torus)
     #example = Example('BBABabAAA')
-    example = Example('BBaBAbaa') #important
+    #example = Example('BBaBAbaa') #important
     #example = Example('BAAbbaaBBA')
     #example = Example('BABABBAb', surface=punctured_torus)
+
+    #crisp
+    example = Example('BBAbaBabA')
     
     example.run()
     example.plot()
