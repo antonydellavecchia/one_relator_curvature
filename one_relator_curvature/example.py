@@ -266,7 +266,7 @@ class Example:
 
         print('generate half edges')
         self.generate_half_edges()
-
+        
         print('set_regions')
         self.set_regions()
 
@@ -349,7 +349,7 @@ class Example:
         return max(region_sizes) 
         
     def run(self):
-        print(f"***** running example {self.word.word} *****")
+        print(f"***** running example B{self.word.word} *****")
         print('generating cell complex')
         self.generate_cell_complex()
 
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     #example = Example('BABABBAb', surface=punctured_torus)
 
     #crisp
-    example = Example('BBAbaBabA')
+    example = Example('BAAABabAAAB')
     
     example.run()
     example.plot()
