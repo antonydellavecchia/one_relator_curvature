@@ -44,7 +44,7 @@ class HyperbolicPlane:
         y_coords = list(map(lambda x: x.imag, self.points))
         ax.scatter(x_coords, y_coords)
 
-        plt.axis([-2, 2, 0, 2])
+        plt.axis([-2, 2, 0, 8])
 
     def plot_disc(self):
         fig = plt.figure(1)

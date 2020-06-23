@@ -3,7 +3,11 @@ from one_relator_curvature.hyperbolic_plane import *
 from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.cell_complex import *
 from one_relator_curvature.word import Word
+from decimal import *
 import matplotlib.pyplot as plt
+
+class PrecisionError(Exception):
+    pass
 
 class Example:
     def __init__(self, word, surface=punctured_torus, curvature_threshold=0):
@@ -119,6 +123,9 @@ class Example:
                 half_edge2.set_flip(half_edge1)
 
                 # add to dict
+                if (start, end) in half_edges or (end, start) in half_edges:
+                    raise PrecisionError()
+                
                 half_edges[(start, end)] = half_edge1
                 half_edges[(end, start)] = half_edge2
 
@@ -140,6 +147,11 @@ class Example:
 
                 half_edge1.set_flip(half_edge2)
                 half_edge2.set_flip(half_edge1)
+
+                if (universal_geodesic.bounds[0], first_lift) in half_edges or \
+                   (universal_geodesic.bounds[1], last_lift) in half_edges:
+                    raise PrecisionError()
+                
                 half_edges[(universal_geodesic.bounds[0], first_lift)] = half_edge1
                 half_edges[(universal_geodesic.bounds[1], last_lift)] = half_edge2
                 start_zero_cell.half_edges.append(half_edge1)
@@ -265,7 +277,11 @@ class Example:
         self.set_sorted_lifts()
 
         print('generate half edges')
-        self.generate_half_edges()
+
+        try :
+            self.generate_half_edges()
+        except PrecisionError:
+            print("PrecisionError")
         
         print('set_regions')
         self.set_regions()
@@ -350,9 +366,9 @@ class Example:
         
     def run(self):
         print(f"***** running example B{self.word.word} *****")
-        print('generating cell complex')
+        print('** generating cell complex **')
         self.generate_cell_complex()
-
+        
         print("Example is valid:", self.is_valid())
 
         if self.is_valid == False:
@@ -387,7 +403,9 @@ if __name__ == '__main__':
     #example = Example('BABABBAb', surface=punctured_torus)
 
     #crisp
-    example = Example('BAAABabAAAB')
-    
+    #example = Example('Babba')
+
+    example = Example('BAABAABaBBB')
+    # single self intersection
     example.run()
     example.plot()

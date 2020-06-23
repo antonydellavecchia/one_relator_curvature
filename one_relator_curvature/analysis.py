@@ -39,7 +39,7 @@ def generate_word(size):
 class Sample:
     def __init__(self, sample_size, word_size, surface=punctured_torus, curvature_threshold=0):
         """
-
+        
         """
         self.sample_size = sample_size
         self.curvature_threshold = curvature_threshold
