@@ -95,7 +95,7 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(10, 10, curvature_threshold=0.5)
+    sample = Sample(20, 10, curvature_threshold=0.5)
     sample.generate_words()
     sample.run_examples()
     sample.find_clusters()

@@ -6,6 +6,7 @@ import copy
 from itertools import combinations_with_replacement
 from functools import reduce
 from one_relator_curvature.circle_intersection import Geometry
+from one_relator_curvature.errors import PrecisionError
 from one_relator_curvature.utils import *
 
 class HyperbolicPlane:
@@ -230,10 +231,11 @@ class Segment(FiniteGeodesic):
                 if intersection != None:
                     intersection = intersection[0] + 1j * intersection[1]
                     bounds.append(intersection)
-
+        
         # catch precision error
         if len(bounds) != 2:
             print('error finding segment')
+            raise PrecisionError()
 
         else:
             FiniteGeodesic.__init__(self, bounds[0], bounds[1])

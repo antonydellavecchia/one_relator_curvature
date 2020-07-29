@@ -3,11 +3,10 @@ from one_relator_curvature.hyperbolic_plane import *
 from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.cell_complex import *
 from one_relator_curvature.word import Word
+from one_relator_curvature.errors import PrecisionError
 from decimal import *
 import matplotlib.pyplot as plt
 
-class PrecisionError(Exception):
-    pass
 
 class Example:
     def __init__(self, word, surface=punctured_torus, curvature_threshold=0):
@@ -20,13 +19,17 @@ class Example:
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
         self.path_start = surface['initial_point']
-        identified_start = mobius(mobius_transformations['B'], self.path_start)
+        self.identified_start = mobius(mobius_transformations['B'], self.path_start)
 
         # maps start point to point on B inverse side and then map by word to get endpoint
-        self.path_end = self.word.transformation(identified_start)
+        self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
 
-
+    def cycle_word(self):
+        self.word.cycle()
+        self.path_end = self.word.transformation(self.identified_start)
+        self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
+        
     def generate_segments(self):
         universal_geodesic = copy.deepcopy(self.universal_geodesic)
         segments = []
@@ -199,7 +202,11 @@ class Example:
         self.half_edges = half_edges
 
     def set_regions(self):
-        self.regions = CellComplex(self.half_edges.values()).regions
+        half_edges = self.half_edges.values()
+        if len(set(map(lambda x: x.nxt.label, half_edges))) != len(half_edges):
+            raise PrecisionError()
+
+        self.regions = CellComplex(half_edges).regions
 
     def set_removed_region(self):
         universal_geodesic = self.universal_geodesic
@@ -277,11 +284,8 @@ class Example:
         self.set_sorted_lifts()
 
         print('generate half edges')
+        self.generate_half_edges()
 
-        try :
-            self.generate_half_edges()
-        except PrecisionError:
-            print("PrecisionError")
         
         print('set_regions')
         self.set_regions()
@@ -365,10 +369,20 @@ class Example:
         return max(region_sizes) 
         
     def run(self):
-        print(f"***** running example B{self.word.word} *****")
-        print('** generating cell complex **')
-        self.generate_cell_complex()
-        
+        cell_complex_generated = False
+
+        while not cell_complex_generated:
+            try:
+                print(f"***** running example B{self.word.word} *****")
+                print('** generating cell complex **')
+                self.generate_cell_complex()
+                cell_complex_generated  = True
+
+            except PrecisionError:
+                print("PrecisionError")
+                self.cycle_word()
+
+
         print("Example is valid:", self.is_valid())
 
         if self.is_valid == False:
@@ -405,7 +419,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BAABAABaBBB')
+    example = Example('BAABAbAbaBB')
     # single self intersection
     example.run()
     example.plot()
