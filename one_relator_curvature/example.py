@@ -420,6 +420,7 @@ if __name__ == '__main__':
     #example = Example('Babba')
 
     example = Example('BAABAbAbaBB')
+
     # single self intersection
     example.run()
     example.plot()

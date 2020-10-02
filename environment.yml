@@ -1,0 +1,17 @@
+name: one-relator-curvature
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.7
+  - pip
+
+  - pip:
+    - pulp
+    - matplotlib
+    - networkx
+    
+  
+      

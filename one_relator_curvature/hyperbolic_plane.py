@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
-from sympy import re, im
 import numpy as np
 import copy
 from itertools import combinations_with_replacement
