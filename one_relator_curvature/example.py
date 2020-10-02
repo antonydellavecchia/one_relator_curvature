@@ -405,7 +405,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BAABAABaBBB')
+    example = Example('BAABAABa')
     # single self intersection
     example.run()
     example.plot()
