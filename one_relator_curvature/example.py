@@ -25,6 +25,7 @@ class Example:
         # maps start point to point on B inverse side and then map by word to get endpoint
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
+        self.removed_region = None
 
     def cycle_word(self):
         self.word.cycle()
@@ -294,7 +295,8 @@ class Example:
         print('set removed regions')
         self.set_removed_region()
 
-        self.generate_links()
+        if self.removed_region:
+            self.generate_links()
 
 
     def is_valid(self):
@@ -377,7 +379,8 @@ class Example:
         while not cell_complex_generated:
             if cycled > word_length:
                 raise CyclingError()
-                break
+        
+            
             try:
                 print(f"***** running example B{self.word.word} *****")
                 print('** generating cell complex **')

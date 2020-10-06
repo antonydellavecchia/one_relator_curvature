@@ -248,6 +248,9 @@ class Region:
     def add_half_edge(self, half_edge):
         self.half_edges.append(half_edge)
 
+    def __len__(self):
+        return len(self.half_edges)
+    
     def print_region(self):
         for half_edge in self.half_edges:
             print(half_edge.label, "***")

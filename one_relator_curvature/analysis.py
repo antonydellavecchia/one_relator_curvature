@@ -104,9 +104,9 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(20, 10, curvature_threshold=0.5)
+    sample = Sample(20, 20, curvature_threshold=0.5)
     sample.generate_words()
-    #sample.run_examples(sample.words)
+    sample.run_examples(sample.words)
     #sample.find_clusters()
     #sample.run_multiplication_example(crisp_words[1])
 
@@ -117,6 +117,7 @@ if __name__ == '__main__':
     }
     
     df = pd.DataFrame(stats)
+    print(df)
     #refined_passed_words = set()
 #
 #    for passed_word in passed_words:
