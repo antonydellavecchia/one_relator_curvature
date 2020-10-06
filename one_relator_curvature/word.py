@@ -21,6 +21,8 @@ class Word:
     def __str__(self):
         return self.word
 
+    def __len__(self):
+        return len(str(self))
     def cycle(self):
         next_B_index = self.word.find('B')
         current_word = self.word

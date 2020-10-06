@@ -3,7 +3,8 @@ from one_relator_curvature.hyperbolic_plane import *
 from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.cell_complex import *
 from one_relator_curvature.word import Word
-from one_relator_curvature.errors import PrecisionError
+from one_relator_curvature.errors import PrecisionError, CyclingError
+
 from decimal import *
 import matplotlib.pyplot as plt
 
@@ -345,7 +346,7 @@ class Example:
 
         prob.writeLP("example_system.lp")
         prob.solve()
-        print("status:", LpStatus[prob.status])
+        #print("status:", LpStatus[prob.status])
         self.curvature = value(prob.objective) - (len(self.attaching_disc) - 2)
 
         angle_labels = list(map(lambda x: x.name, prob.variables()))
@@ -370,8 +371,13 @@ class Example:
         
     def run(self):
         cell_complex_generated = False
-
+        word_length = len(self.word)
+        cycled = 0
+        
         while not cell_complex_generated:
+            if cycled > word_length:
+                raise CyclingError()
+                break
             try:
                 print(f"***** running example B{self.word.word} *****")
                 print('** generating cell complex **')
@@ -381,7 +387,9 @@ class Example:
             except PrecisionError:
                 print("PrecisionError")
                 self.cycle_word()
+                cycled += 1
 
+        #self.plot()
 
         print("Example is valid:", self.is_valid())
 
@@ -397,6 +405,7 @@ class Example:
         print(self.region_stats())
         print("Example curvature:", self.curvature)
         print("First betti number:", self.first_betti_number())
+
         if self.curvature > self.curvature_threshold:
             self.universal_geodesic.color = 'red'
         else:

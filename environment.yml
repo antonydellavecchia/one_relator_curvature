@@ -12,6 +12,7 @@ dependencies:
     - pulp
     - matplotlib
     - networkx
+    - pandas
     
   
       

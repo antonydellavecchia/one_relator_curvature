@@ -3,6 +3,9 @@ from one_relator_curvature.punctured_surfaces import *
 from one_relator_curvature.example import Example
 from one_relator_curvature.word import Word
 from one_relator_curvature.clustering import Clusters
+from one_relator_curvature.important_examples import crisp_words
+from one_relator_curvature.errors import CyclingError
+import pandas as pd
 import matplotlib.pyplot as plt
 import random
 from functools import reduce
@@ -55,24 +58,34 @@ class Sample:
 
         self.words = words
 
-    def run_examples(self):
+    
+    def run_examples(self, words):
         self.example_geodesics = []
 
-        for word in self.words:
+        for word in words:
             word = word
             example = Example(word, curvature_threshold=self.curvature_threshold)
-            example.run()
+            try:
+                example.run()
+            
+                if example.is_valid():
+                    self.examples.append(example)
+                    self.example_geodesics.append(example.universal_geodesic)
 
-            if example.is_valid():
-                self.examples.append(example)
-                self.example_geodesics.append(example.universal_geodesic)
+                    self.stats.append([
+                        example.first_betti_number(),
+                        example.curvature,
+                        example.region_stats()
+                    ])
 
-                self.stats.append([example.first_betti_number(),
-                                   example.curvature,
-                                   example.region_stats()
-                                   ])
+            except CyclingError:
+                print("cycling error")
 
+    def run_multiplication_example(self, word):
+        multiplied_words = map(lambda x: word + x, self.words)
 
+        self.run_examples(multiplied_words)
+        
     def find_clusters(self, features=['curvature'], num_clusters=2):
         Clusters(self.examples).max_spacing(features, num_clusters)
 
@@ -84,12 +97,8 @@ class Sample:
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()
 
-        region_over_betti = list(map(lambda x: (x[0] - x[2]) / x[0], self.stats))
         curvature = list(map(lambda x: x[1], self.stats))
-        cluster_groups = list(map(lambda x: x.cluster_group, self.examples))
-        fig = plt.figure(3)
-        ax = fig.add_subplot(1, 1, 1)
-        ax.scatter(region_over_betti, curvature, c=cluster_groups)
+
         ax.axis([-5, 5, 0, 10])
         
         plt.show()
@@ -97,16 +106,22 @@ class Sample:
 if __name__ == '__main__':
     sample = Sample(20, 10, curvature_threshold=0.5)
     sample.generate_words()
-    sample.run_examples()
-    sample.find_clusters()
+    #sample.run_examples(sample.words)
+    #sample.find_clusters()
+    #sample.run_multiplication_example(crisp_words[1])
 
-    curvatures = list(map(lambda x: x.curvature , sample.examples))
-    print(dict(zip(list(map(lambda x: x.word.word, sample.examples)), curvatures)))
+    stats = {
+        "curvatures": list(map(lambda x: x.curvature , sample.examples)),
+        "punctured_region_size": list(map(lambda x: len(x.removed_region) , sample.examples)),
+        "index": list(map(lambda x: x.word.word, sample.examples))
+    }
+    
+    df = pd.DataFrame(stats)
     #refined_passed_words = set()
 #
 #    for passed_word in passed_words:
 #        refined_passed_words = refined_passed_words.union(set(passed_word))
 #
     #print(sum(map(lambda x: len(passed_word), passed_words)) - len(refined_passed_words))
-    sample.plot()
+    #sample.plot()
 
