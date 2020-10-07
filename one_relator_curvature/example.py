@@ -47,9 +47,11 @@ class Example:
             self.path_end
         )
         self.removed_region = None
+        self.curvature = None
 
     def cycle_word(self):
         self.word.cycle()
+        print(f"finding path end with {str(self.word)}")
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
         
@@ -268,7 +270,6 @@ class Example:
 
             else:
                 segment_end = sorted_lifts[i + 1]
-
             
             key = (segment_start, segment_end)
 
@@ -279,17 +280,21 @@ class Example:
 
             # checks if test_point lies within phase range of segment
             if segment_start_phase >= test_point_phase and segment_end_phase <= test_point_phase:
-                half_edge = half_edges[key]
-                delta_x = test_point.real - center.real
-                delta_y = test_point.imag
+                try:
+                    half_edge = half_edges[key]
+                    delta_x = test_point.real - center.real
+                    delta_y = test_point.imag
 
-                # checks if test_point lies inside semi circle or outside to determine
-                # which half edge is contained in the null region
-                if delta_x**2 + delta_y**2 - radius**2 < 0:
-                    half_edge = half_edge.flip
+                    # checks if test_point lies inside semi circle or outside to determine
+                    # which half edge is contained in the null region
+                    if delta_x**2 + delta_y**2 - radius**2 < 0:
+                        half_edge = half_edge.flip
 
-                # set null region
-                self.removed_region = half_edge.region
+                    # set null region
+                    self.removed_region = half_edge.region
+
+                except(KeyError):
+                    raise PrecisionError()
 
     def generate_links(self):
         label = 0
@@ -327,11 +332,13 @@ class Example:
         print('set_regions')
         self.set_regions()
 
+
         print('set removed regions')
         self.set_removed_region()
 
-        if self.removed_region:
-            self.generate_links()
+        print(self.removed_region)
+        print("generate links")
+        self.generate_links()
 
 
     def is_valid(self):
@@ -427,10 +434,14 @@ class Example:
 
         print("Example is valid:", self.is_valid())
 
-        if self.is_valid == False:
+        if self.is_valid() == False:
+            self.is_valid = False
             return
 
-        print('lp solve')
+        if self.removed_region is None:
+            self.is_valid = False
+            return
+        
         self.find_angle_assignments()
 
         print('assigning')
@@ -445,6 +456,7 @@ class Example:
         else:
             self.universal_geodesic.color = 'green'
 
+        self.is_valid = True
         
 if __name__ == '__main__':
     #example = Example('BBBAA', surface=punctured_torus)
@@ -462,7 +474,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BAABAbAbaBB')
+    example = Example('BAAAAAbbba')
 
     # single self intersection
     example.run()

@@ -59,8 +59,9 @@ def generate_all_reduced_words(size, surface_word="BAba"):
     def is_relevant(word):
         is_reduced = len(word) == len(cyclic_reduce(word))
         starts_with_B = "B" == word[0]
-
-        return is_reduced and starts_with_B
+        multiple_letters = len(list(set(word))) > 1
+        
+        return is_reduced and starts_with_B and multiple_letters
         
     reduced_words = filter(
         lambda x: is_relevant(x),
@@ -87,11 +88,9 @@ def cyclic_reduce(word, surface_word="BAba"):
     if len(word) > len(reduced_word):
         reduced_word = cyclic_reduce(reduced_word)
 
-    
-        
     return reduced_word
 
 if __name__ == "__main__":
-    words = generate_all_words(5)
+    words = generate_all_reduced_words(10)
     print(list(words))
 

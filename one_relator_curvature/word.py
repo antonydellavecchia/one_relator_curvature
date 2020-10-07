@@ -1,6 +1,7 @@
+from collections import Counter
 from one_relator_curvature.utils import mobius
 from one_relator_curvature.word_utils import word_inverse
-
+from one_relator_curvature.errors import CyclingError
 
 class Word:
     def __init__(self, word, matrices):
@@ -26,11 +27,18 @@ class Word:
         return len(str(self))
 
     def cycle(self):
-        next_B_index = self.word.find('B')
-        current_word = self.word
-        cycled_word = f"{current_word[next_B_index:]}B{current_word[:next_B_index]}"
-        self.word = cycled_word[1:]
-        self.inverse = word_inverse(self.word)
+        frequencies = Counter(self.word)
+        print(frequencies)
+        
+        if frequencies["B"] > 1:
+            next_B_index = self.word.find('B')
+            current_word = self.word
+            cycled_word = f"{current_word[next_B_index:]}B{current_word[:next_B_index]}"
+            self.word = cycled_word[1:]
+            self.inverse = word_inverse(self.word)
+
+        elif frequencies["b"] > 0:
+            raise CyclingError()
 
     def inverse_transformation(self, z):
         """ transforms point by inverse"""
@@ -39,3 +47,9 @@ class Word:
             z = mobius(matrix, z)
         return z
 
+
+if __name__ == "__main__":
+    word = Word("BAAAAAbbba", [[]])
+    print(str(word))
+    word.cycle()
+    print(str(word))
