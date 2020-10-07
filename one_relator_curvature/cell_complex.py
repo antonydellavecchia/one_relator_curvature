@@ -1,10 +1,13 @@
 import numpy as np
 
-# 0 - cells that arise from an intersection of segments
-# hence the point lies in the fundamental domain
-# they can also be identified by the list of halfedges that point to them
+
 class ZeroCell:
     def __init__(self, segment1, segment2, point, label):
+        """
+         0 - cells that arise from an intersection of segments
+        hence the point lies in the fundamental domain
+        they can also be identified by the list of halfedges that point to them
+        """
         self.label = label
         self.point = point
         self.index = (None, None)
@@ -25,11 +28,13 @@ class ZeroCell:
             self.lifts = (lift2, lift1)
             self.segments = (segment2, segment1)
 
-    # maps point near lift in universal cover
     def switch_lift(self, lift, point):
-        # line between lift and point represent a one cell in universal cover
-        # we map down to fundamental domain and map to the other lift
-        # to get an orientation near the end of half edge
+        """
+        maps point near lift in universal cover
+        line between lift and point represent a one cell in universal cover
+        we map down to fundamental domain and map to the other lift
+        to get an orientation near the end of half edge
+        """
         mapped_point = point
         
         if lift == self.lifts[0]:
@@ -45,8 +50,10 @@ class ZeroCell:
 
         return mapped_point
 
-    # the index is the ordering of lifts along universal geodesic
     def set_index(self, lift, index):
+        """   
+        the index is the ordering of lifts along universal geodesic
+        """
         if lift == self.lifts[0]:
             self.index = (index, self.index[1])
 
@@ -65,7 +72,8 @@ class ZeroCell:
 
         else:
             print('error getting lift index')
-        
+
+            
 class HalfEdge:
     def __init__(self, label):
         self.label = label
@@ -82,10 +90,13 @@ class HalfEdge:
     def belongs_to(self, region):
         self.region = region
 
-# links are the graphs at zero-cells:
-# we assume no triple intersections
+
 class Link:
     def __init__(self, zero_cell=None):
+        """ 
+        links are the graphs at zero-cells:
+        we assume no triple intersections
+        """
         self.zero_cell = zero_cell
         self.link_map = {
             (-1, 0): [],
@@ -103,12 +114,11 @@ class Link:
                 num_vertices += 1
                 num_edges += len(edges)
 
-        # each edge gets counted 
         num_edges = num_edges / 2
 
         return num_vertices - num_edges
             
-    def full_link(self,label, removed_region):
+    def full_link(self, label, removed_region):
         # keys are vertices values are list of edges at vertex
         zero_cell = self.zero_cell
         vertices = list(self.link_map.keys())
@@ -155,15 +165,15 @@ class Link:
         labels = []
 
         for edges in self.link_map.values():
-            labels.extend([str(x[2]) for x in edges if str(x[2]) not in labels ])
+            labels.extend([
+                str(x[2]) for x in edges if str(x[2]) not in labels
+            ])
 
         for index in range(6 - len(labels)):
             labels.append("none")
 
         return tuple(labels)
     
-        
-    # set edges at vertex
     def set_edges(self, vertex, edges):
         self.link_map[vertex] = edges
             
@@ -187,8 +197,6 @@ class Link:
 
         return self
 
-
-    # return true if graph it has no edges
     def is_empty(self):
         number_of_edges = 0
 
@@ -206,9 +214,10 @@ class Link:
 
         return number_of_edges
 
-
-    # find all sub graphs of valence at least 2
     def get_equations(self):
+        """
+        find all sub graphs of valence at least 2
+        """
         equations = []
         removed_edges = []
 
@@ -227,9 +236,10 @@ class Link:
                 
                     else:
                         sub_equations = regular_section.get_equations()
-                        equations.extend(
-                            [ equation for equation in sub_equations if equation not in equations ]
-                        )
+                        equations.extend([
+                            equation for equation in sub_equations
+                            if equation not in equations
+                        ])
 
         if not self.is_empty():
             equations.append({
@@ -239,9 +249,10 @@ class Link:
 
         return equations
 
-# a region is a two cell that lies in the fundamental domain
+
 class Region:
     def __init__(self, label):
+        """a region is a two cell that lies in the fundamental domain"""
         self.label = label
         self.half_edges = []
 
@@ -257,20 +268,22 @@ class Region:
 
     def get_equation(self):
         return [x.label for x in self.half_edges]
-    # returns labels of half edges in region
+
     def get_labels(self):
+        """ returns labels of half edges in region"""
         return [half_edge.label for half_edge in self.half_edges]
 
     def get_vertices(self):
         return list(map(lambda x: x.zero_cell_label, self.half_edges))
 
+    
 class CellComplex:
     def __init__(self, half_edges):
         self.regions = []
         label = 0
 
         for half_edge in half_edges:
-            if half_edge.region == None:
+            if half_edge.region is None:
                 region = Region(label)
                 region.add_half_edge(half_edge)
                 half_edge.belongs_to(region)
