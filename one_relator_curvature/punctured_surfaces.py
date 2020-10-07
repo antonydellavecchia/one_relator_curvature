@@ -1,5 +1,10 @@
 import matplotlib.pyplot as plt
-from one_relator_curvature.hyperbolic_plane import Geodesic, Domain, upper_to_disc, disc_to_upper, HyperbolicPlane, mobius
+from one_relator_curvature.hyperbolic_plane import (
+    Geodesic,
+    Domain,
+    HyperbolicPlane
+)
+from one_relator_curvature.utils import mobius, upper_to_disc, disc_to_upper
 import numpy as np
 import copy
 

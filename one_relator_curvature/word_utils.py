@@ -17,7 +17,8 @@ def word_inverse(word):
     inverse_word = ''
 
     for letter in reversed(word):
-        inverseWord = inverse_word + inverse_letter(letter)
+        inverse_word = inverse_word + inverse_letter(letter)
+
     return inverse_word
 
 def generate_random_word(size):

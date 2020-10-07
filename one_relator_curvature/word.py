@@ -1,4 +1,5 @@
-from one_relator_curvature.utils import *
+from one_relator_curvature.utils import mobius
+from one_relator_curvature.word_utils import word_inverse
 
 
 class Word:
@@ -23,6 +24,7 @@ class Word:
 
     def __len__(self):
         return len(str(self))
+
     def cycle(self):
         next_B_index = self.word.find('B')
         current_word = self.word
@@ -37,14 +39,3 @@ class Word:
             z = mobius(matrix, z)
         return z
 
-    def get_equivalence_class(self, generators=['a', 'b']):
-        if self.equivalence_class == None:
-            self.equivalence_class = equivalence_class(self.word, generators)
-
-        return self.equivalence_class
-
-
-if __name__ == '__main__':
-    word = Word('ababbabbabaBBBABa', [])
-    print(word.get_equivalence_class())
-    word.cycle()

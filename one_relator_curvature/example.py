@@ -1,11 +1,19 @@
 from pulp import *
-from one_relator_curvature.hyperbolic_plane import *
-from one_relator_curvature.punctured_surfaces import *
-from one_relator_curvature.cell_complex import *
+from one_relator_curvature.circle_intersection import Geometry
+from one_relator_curvature.hyperbolic_plane import (
+    FiniteGeodesic,
+    Segment,
+    HyperbolicPlane
+)
+from one_relator_curvature.utils import mobius
+from one_relator_curvature.word_utils import word_inverse
+from one_relator_curvature.punctured_surfaces import punctured_torus
+from one_relator_curvature.cell_complex import CellComplex
 from one_relator_curvature.word import Word
 from one_relator_curvature.errors import PrecisionError, CyclingError
 
 from decimal import *
+import copy
 import matplotlib.pyplot as plt
 
 
@@ -20,11 +28,17 @@ class Example:
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
         self.path_start = surface['initial_point']
-        self.identified_start = mobius(mobius_transformations['B'], self.path_start)
+        self.identified_start = mobius(
+            mobius_transformations['B'],
+            self.path_start
+        )
 
         # maps start point to point on B inverse side and then map by word to get endpoint
         self.path_end = self.word.transformation(self.identified_start)
-        self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
+        self.universal_geodesic = FiniteGeodesic(
+            self.path_start,
+            self.path_end
+        )
         self.removed_region = None
 
     def cycle_word(self):
@@ -37,15 +51,27 @@ class Example:
         segments = []
         partial_string = ''
         partial_word = Word(partial_string, self.mobius_transformations)
-        segment = Segment(universal_geodesic, self.fundamental_domain, partial_word)
+        segment = Segment(
+            universal_geodesic,
+            self.fundamental_domain,
+            partial_word
+        )
+
         segments.append(segment)
         max_segment = segment
-
+        
         for i in reversed(self.word.inverse):
             universal_geodesic.mobius(self.word.matrices[i])
             partial_string = i + partial_string
-            partial_word = Word(word_inverse(partial_string), self.mobius_transformations)
-            segment = Segment(universal_geodesic, self.fundamental_domain, partial_word)
+            partial_word = Word(
+                word_inverse(partial_string),
+                self.mobius_transformations
+            )
+            segment = Segment(
+                universal_geodesic,
+                self.fundamental_domain,
+                partial_word
+            )
 
             if segment.absolute_max.imag > max_segment.absolute_max.imag:
                 max_segment = segment
@@ -57,14 +83,17 @@ class Example:
 
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()
-        hyperbolic_plane.tesselate(self.fundamental_domain, self.mobius_transformations.values())
+        hyperbolic_plane.tesselate(
+            self.fundamental_domain,
+            self.mobius_transformations.values()
+        )
         hyperbolic_plane.geodesics.extend(self.segments)
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()
         plt.show()
 
     def generate_zero_cells(self):
-        zero_cells  = {}
+        zero_cells = {}
         segments = self.segments
         number_of_segments = len(segments)
         
@@ -287,7 +316,6 @@ class Example:
 
         print('generate half edges')
         self.generate_half_edges()
-
         
         print('set_regions')
         self.set_regions()
@@ -379,20 +407,16 @@ class Example:
         while not cell_complex_generated:
             if cycled > word_length:
                 raise CyclingError()
-        
-            
             try:
                 print(f"***** running example B{self.word.word} *****")
                 print('** generating cell complex **')
                 self.generate_cell_complex()
-                cell_complex_generated  = True
+                cell_complex_generated = True
 
             except PrecisionError:
                 print("PrecisionError")
                 self.cycle_word()
                 cycled += 1
-
-        #self.plot()
 
         print("Example is valid:", self.is_valid())
 
