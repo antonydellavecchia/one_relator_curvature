@@ -8,13 +8,20 @@ from one_relator_curvature.hyperbolic_plane import (
 from one_relator_curvature.utils import mobius
 from one_relator_curvature.word_utils import word_inverse
 from one_relator_curvature.punctured_surfaces import punctured_torus
-from one_relator_curvature.cell_complex import CellComplex
+from one_relator_curvature.cell_complex import (
+    CellComplex,
+    ZeroCell,
+    HalfEdge,
+    Link
+)
+
 from one_relator_curvature.word import Word
 from one_relator_curvature.errors import PrecisionError, CyclingError
 
 from decimal import *
 import copy
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Example:
