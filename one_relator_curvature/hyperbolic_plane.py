@@ -2,11 +2,15 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 import numpy as np
 import copy
-from itertools import combinations_with_replacement
-from functools import reduce
 from one_relator_curvature.circle_intersection import Geometry
 from one_relator_curvature.errors import PrecisionError
-from one_relator_curvature.utils import *
+from one_relator_curvature.utils import (
+    mobius,
+    upper_to_disc,
+    complex_to_vector,
+    get_arc
+)
+
 
 class HyperbolicPlane:
     def __init__(self):
@@ -16,10 +20,15 @@ class HyperbolicPlane:
         self.geodesics = []
         self.points = []
 
-    def tesselate(self, fundamental_domain, mobius_transformations, num_iter=2):
+    def tesselate(
+        self,
+        fundamental_domain,
+        mobius_transformations,
+        num_iter=2
+    ):
         domains = [fundamental_domain]
         iteration_number = 0
-        
+
         while domains:
             domain = domains.pop()
 
@@ -62,6 +71,7 @@ class HyperbolicPlane:
         plt.axis([-2, 2, -2, 2])
         pass
 
+
 class Geodesic:
     """Semi circles on upper half plane
     perpendicular circles of disc
@@ -76,7 +86,7 @@ class Geodesic:
 
         else:
             self.orient = -1
-        
+
         if end == float('inf') or start == float('inf'):
             self.orient = None
 
@@ -90,17 +100,24 @@ class Geodesic:
         return abs((self.roots[1] - self.roots[0])) / 2
 
     def get_roots_disc(self):
-        return  list(map(lambda x: upper_to_disc(x), self.roots))
+        return list(map(lambda x: upper_to_disc(x), self.roots))
 
     def get_center_disc(self):
-        boundary_point1, boundary_point2 = list(map(lambda x: np.array([x.real, x.imag]), self.get_roots_disc()))
-        perp_vec1, perp_vec2 = list(map(lambda x: np.array([-x.imag, x.real]), self.get_roots_disc()))
+        boundary_point1, boundary_point2 = list(
+            map(lambda x: np.array([x.real, x.imag]), self.get_roots_disc())
+        )
+        
+        perp_vec1, perp_vec2 = list(
+            map(lambda x: np.array([-x.imag, x.real]), self.get_roots_disc())
+        )
         
         if abs(np.dot(perp_vec1, perp_vec2)) == 1:
             return np.inf
 
-        intersection = np.dot(boundary_point1 - boundary_point2, boundary_point1) \
-            / np.dot(boundary_point1, perp_vec2)
+        intersection = np.dot(
+            boundary_point1 - boundary_point2,
+            boundary_point1
+        ) / np.dot(boundary_point1, perp_vec2)
 
         center = np.dot(intersection, perp_vec2) + boundary_point2
         return center[0] + center[1] * 1j
@@ -117,7 +134,14 @@ class Geodesic:
             theta1, theta2 = get_arc(center, self.get_roots_disc())
                 
             radius = np.linalg.norm([center.real, center.imag] - roots[0])
-            arc = patches.Arc((center.real, center.imag), 2 * radius, 2 * radius, 0.0, theta1, theta2, color=self.color)
+            arc = patches.Arc(
+                (center.real, center.imag),
+                2 * radius, 2 * radius,
+                0.0,
+                theta1,
+                theta2,
+                color=self.color
+            )
             ax.add_patch(arc)
  
     def plot_upper_half(self, ax):
@@ -133,14 +157,17 @@ class Geodesic:
             ax.add_patch(circ)
 
 class FiniteGeodesic(Geodesic):
-    #all finite geodesics will lie on a semi circle
-    #  we are not interested in the finite geodesics that lie
-    # on an infinite line since such geodesics can only arise from
-    #non reduced words
     def __init__(self, start, end, color='r'):
+        """
+        all finite geodesics will lie on a semi circle
+        we are not interested in the finite geodesics that lie
+        on an infinite line since such geodesics can only arise from
+        non reduced words
+        """
         # Find roots of circle (center - radius), (center + radius) with center on real
         # line and passes through start, end
-        center = (abs(end) ** 2 - abs(start) ** 2) / (2 * (end.real - start.real))
+        center = (abs(end) ** 2 - abs(start) ** 2)\
+            / (2 * (end.real - start.real))
         radius = abs(start - center)
 
         if start.real < end.real:
@@ -159,9 +186,8 @@ class FiniteGeodesic(Geodesic):
         
     def set_arc(self):
         center = self.get_center()
-        radius = self.get_radius()
 
-        if self.bounds[0].real < self.bounds[1].real :
+        if self.bounds[0].real < self.bounds[1].real:
             self.orient = 1
         else:
             self.orient = -1
@@ -173,23 +199,39 @@ class FiniteGeodesic(Geodesic):
         center = self.get_center()
         radius = self.get_radius()
         theta1, theta2 = self.theta
-        arc = patches.Arc((center.real, center.imag), 2 * radius, 2 * radius, 0.0, theta1, theta2, color=self.color)
+        arc = patches.Arc(
+            (center.real, center.imag),
+            2 * radius, 2 * radius,
+            0.0,
+            theta1,
+            theta2,
+            color=self.color
+        )
         ax.add_patch(arc)
-
 
     def plot_disc(self, ax):
         center = self.get_center_disc()
         points = list(map(lambda x: upper_to_disc(x), self.bounds))
         radius = abs(center - points[0])
-        #np.linalg.norm(np.array([center.real, center.imag] - [points[0].real, points[0].imag])
         theta1, theta2 = get_arc(center, points)
-        arc = patches.Arc((center.real, center.imag), 2 * radius, 2 * radius, 0.0, theta1, theta2, color=self.color)
+        arc = patches.Arc(
+            (center.real, center.imag),
+            2 * radius,
+            2 * radius,
+            0.0,
+            theta1,
+            theta2,
+            color=self.color
+        )
         ax.add_patch(arc)
 
+        
 class Segment(FiniteGeodesic):
-    # segment is a finite geodesic in the fundamental domain
-    #pWord maps the segment back to a segment of the original geodesic
     def __init__(self, path, fundamental_domain, partial_word):
+        """ 
+        segment is a finite geodesic in the fundamental domain
+        pWord maps the segment back to a segment of the original geodesic
+        """
         self.partial_word = partial_word
         self.absolute_max = None
 
@@ -204,7 +246,7 @@ class Segment(FiniteGeodesic):
 
                 # checks for intersection
                 y_squared = path_radius ** 2 - (x_coord - path_center) ** 2
-                if  y_squared > 0:
+                if y_squared > 0:
                     y_coord = np.sqrt(y_squared)
                     intersection = x_coord + y_coord * 1j
 
@@ -215,7 +257,7 @@ class Segment(FiniteGeodesic):
 
                 # checks for intersection
                 y_squared = path_radius ** 2 - (x_coord - path_center) ** 2
-                if  y_squared > 0:
+                if y_squared > 0:
                     y_coord = np.sqrt(y_squared)
                     intersection = x_coord + y_coord * 1j
 
@@ -225,9 +267,12 @@ class Segment(FiniteGeodesic):
                 geodesic_center = geodesic.get_center().real
                 geodesic_circle = (geodesic_center, 0, geodesic_radius)
                 path_circle = (path_center, 0, path_radius)
-                intersection = Geometry().circle_intersection(geodesic_circle, path_circle)
+                intersection = Geometry().circle_intersection(
+                    geodesic_circle,
+                    path_circle
+                )
                 
-                if intersection != None:
+                if intersection is not None:
                     intersection = intersection[0] + 1j * intersection[1]
                     bounds.append(intersection)
         
@@ -243,24 +288,28 @@ class Segment(FiniteGeodesic):
             radius = self.get_radius()
 
             # max at center
-            if center.real <= self.bounds[1].real and center.real >= self.bounds[0].real:
+            if center.real <= self.bounds[1].real and \
+               center.real >= self.bounds[0].real:
                 self.absolute_max = center.real + radius * 1j
 
             # max at left boundary
             elif self.bounds[0].imag > self.bounds[1].imag:
-                self.absolute_max = self.bounds[0].real + self.bounds[0].imag * 1j
+                self.absolute_max = self.bounds[0].real + \
+                    self.bounds[0].imag * 1j
 
             # max at right most boundary
             else:
-                self.absolute_max = self.bounds[1].real + self.bounds[1].imag * 1j
+                self.absolute_max = self.bounds[1].real + \
+                    self.bounds[1].imag * 1j
 
-    # lifts point on segment to universal cover
     def lift(self, point):
+        """lifts point on segment to universal cover"""
         return self.partial_word.transformation(point)
 
-    # maps point on universal cover to fundamental domain
     def inverse_lift(self, point):
+        """maps point on universal cover to fundamental domain"""
         return self.partial_word.inverse_transformation(point)
+
 
 class Domain:
     def __init__(self, boundary):
@@ -274,6 +323,7 @@ class Domain:
         for geodesic in self.boundary:
             geodesic.mobius(matrix)
 
+            
 if __name__ == '__main__':
     roots = [(np.inf,  -1.0), (-1.0, 0.0), (0.0, 1.0), (np.inf, 1.0)]
     bounds = list(map(lambda x: Geodesic(x[0], x[1]), roots))
@@ -281,10 +331,12 @@ if __name__ == '__main__':
     hyperbolic_plane = HyperbolicPlane()
 
     # A, B, A inverse, B inverse
-    mobius_transformations = [ np.array([[1, 1], [1, 2]]), 
-                               np.array([[1, -1], [-1, 2]]), 
-                               np.array([[2, -1], [-1, 1]]), 
-                               np.array([[2, 1], [1, 1]])] 
+    mobius_transformations = [
+        np.array([[1, 1], [1, 2]]), 
+        np.array([[1, -1], [-1, 2]]), 
+        np.array([[2, -1], [-1, 1]]), 
+        np.array([[2, 1], [1, 1]])
+    ]
 
     hyperbolic_plane.tesselate(fundamental_domain, mobius_transformations)
     hyperbolic_plane.plot_upper_half()
