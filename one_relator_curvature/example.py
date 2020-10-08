@@ -14,7 +14,7 @@ from one_relator_curvature.cell_complex import (
     HalfEdge,
     Link
 )
-
+from one_relator_curvature.results import Result
 from one_relator_curvature.word import Word
 from one_relator_curvature.errors import PrecisionError, CyclingError
 
@@ -25,12 +25,11 @@ import numpy as np
 
 
 class Example:
-    def __init__(self, word, surface=punctured_torus, curvature_threshold=0):
+    def __init__(self, word, surface=punctured_torus):
         """
         
         """
         mobius_transformations = surface['mobius_transformations']
-        self.curvature_threshold = curvature_threshold
         self.word = Word(word[1:], mobius_transformations)
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
@@ -342,8 +341,11 @@ class Example:
         self.generate_links()
 
 
+    def get_num_intersections(self):
+        return len(self.attaching_disc) / 2
+
     def is_valid(self):
-        euler = len(self.regions) - len(self.attaching_disc) / 2
+        euler = len(self.regions) - self.get_num_intersections()
         return euler == 0
 
     def find_angle_assignments(self):
@@ -406,6 +408,17 @@ class Example:
         
         #print(dict(zip(points, weights)))
 
+    def save(self, session):
+        try:
+            result = Result(
+                word=str(self.word),
+                punctured_region_size=len(self.removed_region),
+                intersections=self.get_num_intersections(),
+                curvature=self.curvature
+            )
+
+            
+
     def run(self):
         cell_complex_generated = False
         word_length = len(self.word)
@@ -444,11 +457,6 @@ class Example:
         self.set_vertex_weights()
 
         print("Example curvature:", self.curvature)
-
-        if self.curvature > self.curvature_threshold:
-            self.universal_geodesic.color = 'red'
-        else:
-            self.universal_geodesic.color = 'green'
 
         self.is_valid = True
         

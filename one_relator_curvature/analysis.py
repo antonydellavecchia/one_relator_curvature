@@ -4,20 +4,19 @@ from one_relator_curvature.word_utils import generate_random_word, generate_all_
 from one_relator_curvature.example import Example
 from one_relator_curvature.clustering import Clusters
 from one_relator_curvature.errors import CyclingError
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
 class Sample:
-    def __init__(self, sample_size, word_size, surface=punctured_torus, curvature_threshold=0):
+    def __init__(self, sample_size, word_size, surface=punctured_torus):
         """
         
         """
         self.sample_size = sample_size
-        self.curvature_threshold = curvature_threshold
         self.word_size = word_size
         self.surface = surface
-        self.stats = []
         self.examples = []
 
     def generate_all_reduced_words(self):
@@ -31,22 +30,18 @@ class Sample:
         self.words = words
 
     
-    def run_examples(self, words):
+    def run_examples(self):
         self.example_geodesics = []
 
-        for word in words:
+        for word in self.words:
             word = word
-            example = Example(word, curvature_threshold=self.curvature_threshold)
+            example = Example(word)
             try:
                 example.run()
             
                 if example.is_valid and example.removed_region:
                     self.examples.append(example)
-                    self.example_geodesics.append(example.universal_geodesic)
 
-                    self.stats.append([
-                        example.curvature
-                    ])
 
             except CyclingError:
                 print("cycling error")
@@ -73,15 +68,9 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(20, word_size=10, curvature_threshold=0.5)
+    sample = Sample(20, word_size=10)
     sample.generate_all_reduced_words()
-    sample.run_examples(sample.words)
-
-    stats = {
-        "curvatures": list(map(lambda x: x.curvature , sample.examples)),
-        "punctured_region_size": list(map(lambda x: len(x.removed_region) , sample.examples)),
-        "index": list(map(lambda x: x.word.word, sample.examples))
-    }
+    sample.run_examples()
     
     df = pd.DataFrame(stats)
     print(df)

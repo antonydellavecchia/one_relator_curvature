@@ -8,9 +8,10 @@ class Result(Base):
     __tablename__ = 'results'
     id = Column(Integer, primary_key=True)
     word = Column(String, unique=True)
+    punctured_region_size = Column(Integer)
     intersections = Column(Integer)
     curvature = Column(Float)
     
     def __repr__(self):
-        return f"<Result(word='{self.word}', intersections='{self.intersections}', curvature={self.curvature})>"
+        return f"<Result(word='{self.word}')>"
 
