@@ -40,14 +40,12 @@ class Sample:
             try:
                 example.run()
             
-                if example.is_valid:
+                if example.is_valid and example.removed_region:
                     self.examples.append(example)
                     self.example_geodesics.append(example.universal_geodesic)
 
                     self.stats.append([
-                        example.first_betti_number(),
-                        example.curvature,
-                        example.region_stats()
+                        example.curvature
                     ])
 
             except CyclingError:

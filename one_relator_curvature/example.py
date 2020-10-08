@@ -54,6 +54,7 @@ class Example:
         print(f"finding path end with {str(self.word)}")
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
+            
         
     def generate_segments(self):
         universal_geodesic = copy.deepcopy(self.universal_geodesic)
@@ -397,9 +398,6 @@ class Example:
         angles = list(map(lambda x: x.varValue, prob.variables()))
         self.angle_assignments = dict(zip(angle_labels, angles))
 
-    def first_betti_number(self):
-        return len(self.links) + 1
-
     def set_vertex_weights(self):
         points = list(map(lambda x: x.zero_cell.point, self.links))
         labels = list(map(lambda x: x.get_labels(), self.links))
@@ -408,11 +406,6 @@ class Example:
         
         #print(dict(zip(points, weights)))
 
-    def region_stats(self):
-        region_vertices = list(map(lambda x: x.get_vertices(), self.regions))
-        region_sizes = list(map(lambda x: len(set(x)), region_vertices))
-        return max(region_sizes) 
-        
     def run(self):
         cell_complex_generated = False
         word_length = len(self.word)
@@ -429,8 +422,11 @@ class Example:
 
             except PrecisionError:
                 print("PrecisionError")
-                self.cycle_word()
-                cycled += 1
+                try:
+                    self.cycle_word()
+                    cycled += 1
+                except CyclingError:
+                    return
 
         print("Example is valid:", self.is_valid())
 
@@ -447,9 +443,7 @@ class Example:
         print('assigning')
         self.set_vertex_weights()
 
-        print(self.region_stats())
         print("Example curvature:", self.curvature)
-        print("First betti number:", self.first_betti_number())
 
         if self.curvature > self.curvature_threshold:
             self.universal_geodesic.color = 'red'
@@ -474,7 +468,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BAAAAAbbba')
+    example = Example('BAAAAAAAba')
 
     # single self intersection
     example.run()

@@ -37,7 +37,7 @@ class Word:
             self.word = cycled_word[1:]
             self.inverse = word_inverse(self.word)
 
-        elif frequencies["b"] > 0:
+        else:
             raise CyclingError()
 
     def inverse_transformation(self, z):
