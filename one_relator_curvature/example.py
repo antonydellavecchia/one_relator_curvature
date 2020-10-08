@@ -411,13 +411,17 @@ class Example:
     def save(self, session):
         try:
             result = Result(
-                word=str(self.word),
+                word=f"B{str(self.word)}",
                 punctured_region_size=len(self.removed_region),
                 intersections=self.get_num_intersections(),
                 curvature=self.curvature
             )
 
+            session.add(result)
             
+        except Exception:
+            raise
+        
 
     def run(self):
         cell_complex_generated = False

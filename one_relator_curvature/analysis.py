@@ -4,7 +4,7 @@ from one_relator_curvature.word_utils import generate_random_word, generate_all_
 from one_relator_curvature.example import Example
 from one_relator_curvature.clustering import Clusters
 from one_relator_curvature.errors import CyclingError
-
+from one_relator_curvature.results import Result
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
@@ -30,7 +30,7 @@ class Sample:
         self.words = words
 
     
-    def run_examples(self):
+    def run_examples(self, session):
         self.example_geodesics = []
 
         for word in self.words:
@@ -40,8 +40,8 @@ class Sample:
                 example.run()
             
                 if example.is_valid and example.removed_region:
-                    self.examples.append(example)
-
+                    example.save(session)
+                    session.commit()
 
             except CyclingError:
                 print("cycling error")
@@ -70,9 +70,7 @@ class Sample:
 if __name__ == '__main__':
     sample = Sample(20, word_size=10)
     sample.generate_all_reduced_words()
-    sample.run_examples()
-    
-    df = pd.DataFrame(stats)
-    print(df)
+
+
 
     
