@@ -47,6 +47,7 @@ class Example:
         )
         self.removed_region = None
         self.curvature = None
+        self.is_valid = True
 
     def cycle_word(self):
         self.word.cycle()
@@ -114,7 +115,11 @@ class Example:
                 center2 = segments[j].get_center().real
                 circle1 = (center1, 0, radius1)
                 circle2 = (center2, 0, radius2)
-                intersection = Geometry().circle_intersection(circle1, circle2)
+
+                try:
+                    intersection = Geometry().circle_intersection(circle1, circle2)
+                except ValueError:
+                    raise PrecisionError
 
                 if intersection != None:
                     orient = segments[i].orient
@@ -336,15 +341,19 @@ class Example:
         print('set removed regions')
         self.set_removed_region()
 
-        print(self.removed_region)
-        print("generate links")
-        self.generate_links()
+        if self.removed_region:
+            print("generate links")
+            self.is_valid = True
+            self.generate_links()
+
+        else:
+            self.is_valid = False
 
 
     def get_num_intersections(self):
         return len(self.attaching_disc) / 2
 
-    def is_valid(self):
+    def check_euler(self):
         euler = len(self.regions) - self.get_num_intersections()
         return euler == 0
 
@@ -408,20 +417,13 @@ class Example:
         
         #print(dict(zip(points, weights)))
 
-    def save(self, session):
-        try:
-            result = Result(
-                word=f"B{str(self.word)}",
-                punctured_region_size=len(self.removed_region),
-                intersections=self.get_num_intersections(),
-                curvature=self.curvature
-            )
-
-            session.add(result)
-            
-        except Exception:
-            raise
-        
+    def get_result(self):
+        return Result(
+            word=f"B{str(self.word)}",
+            punctured_region_size=len(self.removed_region),
+            intersections=self.get_num_intersections(),
+            curvature=self.curvature
+        )
 
     def run(self):
         cell_complex_generated = False
@@ -445,9 +447,12 @@ class Example:
                 except CyclingError:
                     return
 
-        print("Example is valid:", self.is_valid())
+        print("Example is valid:", self.is_valid)
 
-        if self.is_valid() == False:
+        if not self.is_valid:
+            return
+        
+        if self.check_euler() == False:
             self.is_valid = False
             return
 
@@ -480,7 +485,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BAAAAAAAba')
+    example = Example('BBBBBBBBABBBBBBB')
 
     # single self intersection
     example.run()

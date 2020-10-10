@@ -5,9 +5,27 @@ from one_relator_curvature.example import Example
 from one_relator_curvature.clustering import Clusters
 from one_relator_curvature.errors import CyclingError
 from one_relator_curvature.results import Result
-import pandas as pd
+
+from multiprocessing import Pool
+from functools import partial
+
 import matplotlib.pyplot as plt
 import random
+
+def run_example(word):
+    example = Example(word)
+
+    try:
+        result = example.run()
+            
+        if example.is_valid and example.removed_region:
+            return result
+        else:
+            return None
+
+    except CyclingError:
+        print("cycling error")
+        return None
 
 class Sample:
     def __init__(self, sample_size, word_size, surface=punctured_torus):
@@ -29,22 +47,19 @@ class Sample:
 
         self.words = words
 
-    
     def run_examples(self, session):
-        self.example_geodesics = []
+        def word_in_db(word):
+            return session.query(Result.word).filter_by(word=word).scalar() is not None
 
-        for word in self.words:
-            word = word
-            example = Example(word)
-            try:
-                example.run()
-            
-                if example.is_valid and example.removed_region:
-                    example.save(session)
+        words_to_run = filter(word_in_db, self.words)
+        
+        with Pool(10) as p:
+            results = p.map(run_example, words_to_run)
+
+            for result in results:
+                if result:
+                    session.add(result)
                     session.commit()
-
-            except CyclingError:
-                print("cycling error")
 
     def run_multiplication_example(self, word):
         multiplied_words = map(lambda x: word + x, self.words)
@@ -56,8 +71,10 @@ class Sample:
 
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()
-        hyperbolic_plane.tesselate(self.surface['fundamental_domain'],
-                                   self.surface['mobius_transformations'].values())
+        hyperbolic_plane.tesselate(
+            self.surface['fundamental_domain'],
+            self.surface['mobius_transformations'].values()
+        )
         hyperbolic_plane.geodesics.extend(self.example_geodesics)
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()

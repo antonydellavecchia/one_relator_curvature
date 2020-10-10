@@ -1,6 +1,6 @@
 import random
 import copy
-from itertools import combinations_with_replacement
+from itertools import product
 
 def inverse_letter(letter):
     if letter.isupper():
@@ -53,7 +53,7 @@ def generate_random_word(size):
 def generate_all_reduced_words(size, surface_word="BAba"):
     possible_words = map(
         lambda x: "".join(x),
-        combinations_with_replacement(surface_word, size)
+        product(surface_word, repeat=size)
     )
 
     def is_relevant(word):
