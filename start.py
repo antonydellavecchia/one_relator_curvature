@@ -21,13 +21,12 @@ def main():
 
 
 def run_examples(word_sizes):
-    for word_size in word_sizes:
-        print(f"running sample for all word size {word_size}")
-        with session_scope() as s:
-            sample = analysis.Sample(20, word_size)
-            sample.generate_all_reduced_words()
+    with session_scope() as s:
+        for word_size in word_sizes:
+            print(f"running sample for all word size {word_size}")
+            sample = analysis.Sample(word_size)
             sample.run_examples(s)
-
+        s.commit()
 
 if __name__=="__main__":
     main()

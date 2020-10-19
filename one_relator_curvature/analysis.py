@@ -5,10 +5,10 @@ from one_relator_curvature.example import Example
 from one_relator_curvature.clustering import Clusters
 from one_relator_curvature.errors import CyclingError
 from one_relator_curvature.results import Result
+from one_relator_curvature.decorators import timeit
 
 from multiprocessing import Pool
 from functools import partial
-
 import matplotlib.pyplot as plt
 import random
 
@@ -17,7 +17,6 @@ def run_example(word):
 
     try:
         result = example.run()
-            
         if example.is_valid and example.removed_region:
             return result
         else:
@@ -27,8 +26,16 @@ def run_example(word):
         print("cycling error")
         return None
 
+def word_generator(word_size, num_of_words):
+    word_number = 0
+
+    while word_number < num_of_words:
+        yield generate_random_word(word_size)
+        word_number += 1
+        
+    
 class Sample:
-    def __init__(self, sample_size, word_size, surface=punctured_torus):
+    def __init__(self, word_size, surface=punctured_torus, sample_size = None):
         """
         
         """
@@ -37,38 +44,33 @@ class Sample:
         self.surface = surface
         self.examples = []
 
-    def generate_all_reduced_words(self):
-        self.words = generate_all_reduced_words(self.word_size)
-        
-    def generate_random_words(self):
-        words = []
-        for _ in range(self.sample_size):
-            words.append(generate_random_word(self.word_size))
+        if sample_size:
+            self.words = word_generator(word_size, sample_size)
+        else:
+            self.words = generate_all_reduced_words(word_size)
 
-        self.words = words
-
-    def run_examples(self, session):
+    def run_examples(self, session = None):
         def word_in_db(word):
-            return session.query(Result.word).filter_by(word=word).scalar() is not None
+            if session:
+                return session.query(Result.word).filter_by(word=word).scalar() is not None
+
+            return False
 
         words_to_run = filter(word_in_db, self.words)
+        pool = Pool(999)
+
+        results = pool.map(run_example, words_to_run)
+        num_runs = 0
+            
+        for result in results:
+            num_runs += 1
+
+            if result and session:
+                session.add(result)
+
+        pool.terminate()
+            
         
-        with Pool(10) as p:
-            results = p.map(run_example, words_to_run)
-
-            for result in results:
-                if result:
-                    session.add(result)
-                    session.commit()
-
-    def run_multiplication_example(self, word):
-        multiplied_words = map(lambda x: word + x, self.words)
-
-        self.run_examples(multiplied_words)
-        
-    def find_clusters(self, features=['curvature'], num_clusters=2):
-        Clusters(self.examples).max_spacing(features, num_clusters)
-
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()
         hyperbolic_plane.tesselate(
@@ -85,8 +87,9 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(20, word_size=10)
-    sample.generate_all_reduced_words()
+    sample = Sample(11)
+    sample.run_examples()
+
 
 
 

@@ -1,3 +1,4 @@
+from one_relator_curvature.decorators import timeit
 import random
 import copy
 from itertools import product
@@ -50,6 +51,7 @@ def generate_random_word(size):
         prev_char = new_char
     return word
 
+@timeit
 def generate_all_reduced_words(size, surface_word="BAba"):
     possible_words = map(
         lambda x: "".join(x),
@@ -92,5 +94,5 @@ def cyclic_reduce(word, surface_word="BAba"):
 
 if __name__ == "__main__":
     words = generate_all_reduced_words(10)
-    print(list(words))
+
 
