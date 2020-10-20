@@ -21,24 +21,25 @@ class Word:
         return z
 
     def __str__(self):
-        return f"B{self.word}"
+        return self.word
 
     def __len__(self):
-        return len(str(self)) + 1
+        return len(str(self)) 
 
     def cycle(self):
         frequencies = Counter(self.word)
         print(frequencies)
         
         if frequencies["B"] > 1:
-            next_B_index = self.word.find('B')
-            current_word = self.word
+            word = self.word
+            next_B_index = word.find('B')
+            current_word = word
             cycled_word = f"{current_word[next_B_index:]}B{current_word[:next_B_index]}"
             self.word = cycled_word[1:]
             self.inverse = word_inverse(self.word)
 
         else:
-            raise CyclingError()
+            print("can t cycle")
 
     def inverse_transformation(self, z):
         """ transforms point by inverse"""
@@ -49,7 +50,7 @@ class Word:
 
 
 if __name__ == "__main__":
-    word = Word("BAAAAAbbba", [[]])
+    word = Word("BAAAAABa", [[]])
     print(str(word))
     word.cycle()
     print(str(word))

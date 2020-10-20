@@ -11,6 +11,7 @@ from multiprocessing import Pool
 from functools import partial
 import matplotlib.pyplot as plt
 import random
+import pandas as df
 
 def run_example(word):
     example = Example(word)
@@ -32,7 +33,16 @@ def word_generator(word_size, num_of_words):
     while word_number < num_of_words:
         yield generate_random_word(word_size)
         word_number += 1
-        
+
+def cycle_word_analysis(word):
+    
+    example = Example(word)
+    results = [x.__dict__ for x in example.compare_cycles()]
+    df_results = df.DataFrame(results)
+    del df_results["_sa_instance_state"]
+
+    print(df_results)
+    
     
 class Sample:
     def __init__(self, word_size, surface=punctured_torus, sample_size = None):
@@ -75,8 +85,7 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    sample = Sample(11)
-    sample.run_examples()
+    cycle_word_analysis("BabbaBaBababA")
 
 
 

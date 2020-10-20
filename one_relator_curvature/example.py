@@ -427,6 +427,7 @@ class Example:
     def compare_cycles(self):
         initial_word = str(self.word)
         current_word = None
+        results = []
         self.cycle_word()
 
         while(current_word != initial_word):
@@ -435,13 +436,15 @@ class Example:
             print(current_word, initial_word, current_word != initial_word)
             try:
                 self.generate_cell_complex()
-                self.plot()
-                plt.show()
+                self.run()
+                results.append(self.get_result())
 
             except PrecisionError:
                 print(f"precision error for word {current_word}")
 
             self.cycle_word()
+
+        return results
                 
         
     def run(self):
