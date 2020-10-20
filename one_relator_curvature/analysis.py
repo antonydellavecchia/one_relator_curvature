@@ -43,33 +43,21 @@ class Sample:
         self.word_size = word_size
         self.surface = surface
         self.examples = []
-
+        
         if sample_size:
             self.words = word_generator(word_size, sample_size)
         else:
             self.words = generate_all_reduced_words(word_size)
 
     def run_examples(self, session = None):
-        def word_in_db(word):
-            if session:
-                return session.query(Result.word).filter_by(word=word).scalar() is not None
-
-            return False
-
-        words_to_run = filter(word_in_db, self.words)
-        pool = Pool(999)
-
-        results = pool.map(run_example, words_to_run)
-        num_runs = 0
+        with Pool(11) as pool:
+            results = pool.map(run_example, self.words)
             
-        for result in results:
-            num_runs += 1
+            for result in results:
+                if result:
+                    session.add(result)
 
-            if result and session:
-                session.add(result)
-
-        pool.terminate()
-            
+            session.commit()
         
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()

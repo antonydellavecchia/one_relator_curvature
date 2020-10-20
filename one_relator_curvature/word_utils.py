@@ -51,13 +51,22 @@ def generate_random_word(size):
         prev_char = new_char
     return word
 
-@timeit
-def generate_all_reduced_words(size, surface_word="BAba"):
-    possible_words = map(
+def word_generator(*alphabet, size):
+    return map(
         lambda x: "".join(x),
-        product(surface_word, repeat=size)
+        product(*alphabet, repeat=size)
     )
 
+@timeit
+def generate_all_reduced_words(size, surface_word="BAba", repeat_size = 4):
+    num_of_sub_products = size // repeat_size
+    leftover_product_size = size % repeat_size
+
+    possible_sub_words = word_generator(surface_word, size = repeat_size)
+    combinations_subwords = word_generator(possible_sub_words, size = num_of_sub_products)
+    possible_leftover_subwords = word_generator(surface_word, size = leftover_product_size)
+    possible_words = word_generator(combinations_subwords, possible_leftover_subwords, size = 1)
+    
     def is_relevant(word):
         is_reduced = len(word) == len(cyclic_reduce(word))
         starts_with_B = "B" == word[0]
@@ -94,5 +103,5 @@ def cyclic_reduce(word, surface_word="BAba"):
 
 if __name__ == "__main__":
     words = generate_all_reduced_words(10)
-
+    print(len(list(words)))
 

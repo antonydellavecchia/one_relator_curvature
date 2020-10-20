@@ -4,6 +4,7 @@ from one_relator_curvature import analysis, example, results
 import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
+from one_relator_curvature.decorators import timeit
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -19,14 +20,14 @@ def main():
     run_examples(word_sizes)
 
 
-
+@timeit
 def run_examples(word_sizes):
     with session_scope() as s:
         for word_size in word_sizes:
             print(f"running sample for all word size {word_size}")
             sample = analysis.Sample(word_size)
             sample.run_examples(s)
-        s.commit()
+
 
 if __name__=="__main__":
     main()
