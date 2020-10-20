@@ -16,9 +16,9 @@ def run_example(word):
     example = Example(word)
 
     try:
-        result = example.run()
+        example.run()
         if example.is_valid and example.removed_region:
-            return result
+            return example.get_result()
         else:
             return None
 
@@ -57,7 +57,7 @@ class Sample:
                 if result:
                     session.add(result)
 
-            session.commit()
+        session.commit()
         
     def plot(self):
         hyperbolic_plane = HyperbolicPlane()

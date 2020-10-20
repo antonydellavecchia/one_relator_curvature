@@ -49,8 +49,8 @@ class HyperbolicPlane:
         for geodesic in self.geodesics:
             geodesic.plot_upper_half(ax)
 
-        x_coords = list(map(lambda x: x.real, self.points))
-        y_coords = list(map(lambda x: x.imag, self.points))
+        x_coords = [x.real for x in self.points]
+        y_coords = [x.imag for x in self.points]
         ax.scatter(x_coords, y_coords)
 
         plt.axis([-2, 2, 0, 8])

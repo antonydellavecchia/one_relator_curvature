@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from one_relator_curvature.results import Base
+from one_relator_curvature.results import Result
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-engine = create_engine("sqlite:///examples-test.db")
+engine = create_engine("sqlite:///exampleso.db")
 Session = sessionmaker(bind=engine)
 
 def recreate_database():

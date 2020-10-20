@@ -7,7 +7,7 @@ Base = declarative_base()
 class Result(Base):
     __tablename__ = 'results'
     id = Column(Integer, primary_key=True)
-    word = Column(String, unique=True)
+    word = Column(String)
     punctured_region_size = Column(Integer)
     intersections = Column(Integer)
     curvature = Column(Float)

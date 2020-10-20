@@ -100,7 +100,6 @@ class Example:
         hyperbolic_plane.geodesics.extend(self.segments)
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()
-        plt.show()
 
     def generate_zero_cells(self):
         zero_cells = {}
@@ -425,27 +424,39 @@ class Example:
             curvature=self.curvature
         )
 
+    def compare_cycles(self):
+        initial_word = str(self.word)
+        current_word = None
+        self.cycle_word()
+
+        while(current_word != initial_word):
+            current_word = str(self.word)
+            
+            print(current_word, initial_word, current_word != initial_word)
+            try:
+                self.generate_cell_complex()
+                self.plot()
+                plt.show()
+
+            except PrecisionError:
+                print(f"precision error for word {current_word}")
+
+            self.cycle_word()
+                
+        
     def run(self):
         cell_complex_generated = False
         word_length = len(self.word)
-        cycled = 0
         
-        while not cell_complex_generated:
-            if cycled > word_length:
-                raise CyclingError()
-            try:
-                print(f"***** running example B{self.word.word} *****")
-                print('** generating cell complex **')
-                self.generate_cell_complex()
-                cell_complex_generated = True
+        try:
+            print(f"***** running example B{self.word.word} *****")
+            print('** generating cell complex **')
+            self.generate_cell_complex()
+            cell_complex_generated = True
 
-            except PrecisionError:
-                print("PrecisionError")
-                try:
-                    self.cycle_word()
-                    cycled += 1
-                except CyclingError:
-                    return
+        except PrecisionError:
+            print("PrecisionError")
+            return
 
         print("Example is valid:", self.is_valid)
 
@@ -485,8 +496,10 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BBBBBBBBABBBBBBB')
+    example = Example('BaaBaBabAB')
+    example.compare_cycles()
 
     # single self intersection
-    example.run()
-    example.plot()
+    #example.run()
+    #example.plot()
+    plt.show()

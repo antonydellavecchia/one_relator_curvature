@@ -21,10 +21,10 @@ class Word:
         return z
 
     def __str__(self):
-        return self.word
+        return f"B{self.word}"
 
     def __len__(self):
-        return len(str(self))
+        return len(str(self)) + 1
 
     def cycle(self):
         frequencies = Counter(self.word)
