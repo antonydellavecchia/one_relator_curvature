@@ -1,10 +1,10 @@
 from collections import Counter
 from one_relator_curvature.utils import mobius
-from one_relator_curvature.word_utils import word_inverse
+from one_relator_curvature.word_utils import word_inverse, cycle_word, convert_to_runnable
 from one_relator_curvature.errors import CyclingError
 
 class Word:
-    def __init__(self, word, matrices):
+    def __init__(self, word, matrices = None):
         """Initiate word without the leading B"""
         self.word = word
         self.matrices = matrices
@@ -24,7 +24,20 @@ class Word:
         return self.word
 
     def __len__(self):
-        return len(str(self)) 
+        return len(str(self)) + 1
+
+    def get_cyles(self):
+        cycled_word = f"B{self.word}"
+        cycles = []
+
+        for _ in range(len(self.word)):
+            cycles.append(
+                convert_to_runnable(cycled_word)
+            )
+            cycled_word = cycle_word(cycled_word)
+
+        print("hello", cycles)
+        return cycles
 
     def cycle(self):
         frequencies = Counter(self.word)
@@ -51,6 +64,5 @@ class Word:
 
 if __name__ == "__main__":
     word = Word("BAAAAABa", [[]])
-    print(str(word))
-    word.cycle()
-    print(str(word))
+    word.get_cyles()
+

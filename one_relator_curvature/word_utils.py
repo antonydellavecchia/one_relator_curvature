@@ -3,6 +3,24 @@ import random
 import copy
 from itertools import product
 
+def convert_to_runnable(word, surface_word = "BAba"):
+    leading_letter = word[0]
+    leading_index = surface_word.find(leading_letter)
+    shift = len(surface_word) - leading_index
+    converted_word = ""
+    
+    def new_letter(letter):
+        surface_word_index = surface_word.find(letter)
+        new_index = (surface_word_index + shift) % len(surface_word)
+
+        return surface_word[new_index]
+
+    for letter in word:
+        converted_word += new_letter(letter)
+        
+    return converted_word
+    
+
 def inverse_letter(letter):
     if letter.isupper():
         return letter.lower()
@@ -11,7 +29,7 @@ def inverse_letter(letter):
 
 def cycle_word(word):
     cycled_word = word[-1] + word[:-1]
-
+    
     return cycled_word
     
 def word_inverse(word):

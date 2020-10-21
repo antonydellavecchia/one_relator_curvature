@@ -54,7 +54,7 @@ class Example:
         print(f"finding path end with {str(self.word)}")
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
-            
+
         
     def generate_segments(self):
         universal_geodesic = copy.deepcopy(self.universal_geodesic)
@@ -91,15 +91,15 @@ class Example:
         self.max_segment = max_segment
         self.segments = segments
 
-    def plot(self):
+    def plot(self, fig_num = 1):
         hyperbolic_plane = HyperbolicPlane()
         hyperbolic_plane.tesselate(
             self.fundamental_domain,
             self.mobius_transformations.values()
         )
         hyperbolic_plane.geodesics.extend(self.segments)
-        hyperbolic_plane.plot_upper_half()
-        hyperbolic_plane.plot_disc()
+        hyperbolic_plane.plot_upper_half(fig_num)
+        hyperbolic_plane.plot_disc(fig_num)
 
     def generate_zero_cells(self):
         zero_cells = {}
@@ -417,36 +417,16 @@ class Example:
         #print(dict(zip(points, weights)))
 
     def get_result(self):
-        return Result(
-            word=f"B{str(self.word)}",
-            punctured_region_size=len(self.removed_region),
-            intersections=self.get_num_intersections(),
-            curvature=self.curvature
-        )
+        try:
+            return Result(
+                word=f"B{str(self.word)}",
+                punctured_region_size=len(self.removed_region),
+                intersections=self.get_num_intersections(),
+                curvature=self.curvature
+            )
+        except TypeError:
+            return None
 
-    def compare_cycles(self):
-        initial_word = str(self.word)
-        current_word = None
-        results = []
-        self.cycle_word()
-
-        while(current_word != initial_word):
-            current_word = str(self.word)
-            
-            print(current_word, initial_word, current_word != initial_word)
-            try:
-                self.generate_cell_complex()
-                self.run()
-                results.append(self.get_result())
-
-            except PrecisionError:
-                print(f"precision error for word {current_word}")
-
-            self.cycle_word()
-
-        return results
-                
-        
     def run(self):
         cell_complex_generated = False
         word_length = len(self.word)

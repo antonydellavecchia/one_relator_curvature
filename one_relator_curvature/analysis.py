@@ -2,7 +2,7 @@ from one_relator_curvature.hyperbolic_plane import HyperbolicPlane
 from one_relator_curvature.punctured_surfaces import punctured_torus
 from one_relator_curvature.word_utils import generate_random_word, generate_all_reduced_words
 from one_relator_curvature.example import Example
-from one_relator_curvature.clustering import Clusters
+from one_relator_curvature.word import Word
 from one_relator_curvature.errors import CyclingError
 from one_relator_curvature.results import Result
 from one_relator_curvature.decorators import timeit
@@ -35,14 +35,26 @@ def word_generator(word_size, num_of_words):
         word_number += 1
 
 def cycle_word_analysis(word):
+    word_object = Word(word[1:])
+    words = word_object.get_cyles()
+    results = []
     
-    example = Example(word)
-    results = [x.__dict__ for x in example.compare_cycles()]
+    for index, example_word in enumerate(words):
+        example = Example(example_word)
+        example.run()
+        result = example.get_result()
+
+        if result:
+            results.append(result.__dict__)
+            example.plot(index)
+        
+
     df_results = df.DataFrame(results)
     del df_results["_sa_instance_state"]
 
     print(df_results)
     
+    plt.show()
     
 class Sample:
     def __init__(self, word_size, surface=punctured_torus, sample_size = None):
@@ -85,7 +97,7 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    cycle_word_analysis("BabbaBaBababA")
+    cycle_word_analysis("BabbaBaBababAbaBABAbbabA")
 
 
 

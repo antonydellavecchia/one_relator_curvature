@@ -42,8 +42,8 @@ class HyperbolicPlane:
 
             iteration_number += 1
 
-    def plot_upper_half(self):
-        fig = plt.figure(1)
+    def plot_upper_half(self, fig_num = 1):
+        fig = plt.figure(fig_num)
         ax = fig.add_subplot(1, 2, 1)
 
         for geodesic in self.geodesics:
@@ -55,8 +55,8 @@ class HyperbolicPlane:
 
         plt.axis([-2, 2, 0, 8])
 
-    def plot_disc(self):
-        fig = plt.figure(1)
+    def plot_disc(self, fig_num = 1):
+        fig = plt.figure(fig_num)
         ax = fig.add_subplot(1, 2, 2)
         circ = plt.Circle((0, 0), 1, color='black', fill=False)
         ax.add_patch(circ)
