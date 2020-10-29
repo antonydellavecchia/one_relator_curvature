@@ -274,7 +274,7 @@ class Region:
         return [half_edge.label for half_edge in self.half_edges]
 
     def get_vertices(self):
-        return list(map(lambda x: x.zero_cell_label, self.half_edges))
+        return [x.zero_cell_label for x in self.half_edges]
 
     
 class CellComplex:
@@ -289,7 +289,7 @@ class CellComplex:
                 half_edge.belongs_to(region)
                 initial_label = half_edge.label
                 next_half_edge = half_edge.nxt
-
+                
                 while(next_half_edge.label != initial_label):
                     #print(next_half_edge.label, initial_label)
                     region.add_half_edge(next_half_edge)
@@ -297,6 +297,7 @@ class CellComplex:
                     next_half_edge = next_half_edge.nxt
 
                 self.regions.append(region)
+                label += 1
 
     def print_cell_complex(self):
         for region in self.regions:

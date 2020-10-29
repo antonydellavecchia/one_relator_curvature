@@ -22,7 +22,8 @@ from decimal import *
 import copy
 import matplotlib.pyplot as plt
 import numpy as np
-
+import pandas as pd
+import networkx as nx
 
 class Example:
     def __init__(self, word, surface=punctured_torus):
@@ -91,7 +92,28 @@ class Example:
         self.max_segment = max_segment
         self.segments = segments
 
-    def plot(self, fig_num = 1):
+    def plot(self, fig_num= 1):
+        fig = plt.figure(fig_num)
+        fig.suptitle(f"curvature = {self.curvature}, word = B{self.word}")
+        ax = fig.add_subplot(1, 3, 3)
+
+        removed_region_label = self.removed_region.label
+        pos = nx.spring_layout(self.dual_graph, k=0.9)
+        color_map = [
+            "red" if x == removed_region_label else "blue" for x in self.dual_graph.nodes
+        ]
+
+
+        nx.draw(
+            self.dual_graph,
+            pos=pos,
+            node_color=color_map,
+            connectionstyle='arc3, rad = 0.1',
+            ax=ax
+        )
+        
+        plt.axis('off')
+
         hyperbolic_plane = HyperbolicPlane()
         hyperbolic_plane.tesselate(
             self.fundamental_domain,
@@ -348,6 +370,29 @@ class Example:
         else:
             self.is_valid = False
 
+    def generate_dual_graph(self):
+        edge_set = set()
+        dual_graph = nx.MultiDiGraph()
+        
+        for region in self.regions:
+            first_node = region.label
+            target_nodes = [x.flip.region.label for x in region.half_edges]
+            print(first_node, target_nodes)
+            for node in target_nodes:
+                if (node, first_node) in edge_set:
+                    continue
+
+                if (first_node, node) in edge_set:
+                    dual_graph.add_edge(node, first_node)
+
+                else:
+                    dual_graph.add_edge(first_node, node)
+                    
+                edge_set.add((first_node, node))
+
+        self.dual_graph = dual_graph
+
+
 
     def get_num_intersections(self):
         return len(self.attaching_disc) / 2
@@ -393,14 +438,17 @@ class Example:
 
         prob += objective, "minimize attaching disc"
 
+
         for equation in link_equations:
             prob += equation[0] >= equation[1]
 
         for equation in region_equations:
             prob += equation[0] <= equation[1]
 
+        print(pd.DataFrame(prob.to_dict()["constraints"]))
         prob.writeLP("example_system.lp")
         prob.solve()
+        
         #print("status:", LpStatus[prob.status])
         self.curvature = value(prob.objective) - (len(self.attaching_disc) - 2)
 
@@ -462,6 +510,9 @@ class Example:
         print("Example curvature:", self.curvature)
 
         self.is_valid = True
+
+        print("*** generating dual graph")
+        self.generate_dual_graph()
         
 if __name__ == '__main__':
     #example = Example('BBBAA', surface=punctured_torus)
@@ -479,10 +530,7 @@ if __name__ == '__main__':
     #crisp
     #example = Example('Babba')
 
-    example = Example('BaaBaBabAB')
-    example.compare_cycles()
-
-    # single self intersection
-    #example.run()
-    #example.plot()
+    example = Example('BaBAbaBABaBaB')
+    example.run()
+    example.plot()
     plt.show()

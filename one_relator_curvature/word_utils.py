@@ -76,7 +76,7 @@ def word_generator(*alphabet, size):
     )
 
 @timeit
-def generate_all_reduced_words(size, surface_word="BAba", repeat_size = 4):
+def generate_all_reduced_words(size, surface_word="BAba", repeat_size = 6):
     num_of_sub_products = size // repeat_size
     leftover_product_size = size % repeat_size
 

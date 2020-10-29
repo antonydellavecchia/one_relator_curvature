@@ -12,6 +12,7 @@ from functools import partial
 import matplotlib.pyplot as plt
 import random
 import pandas as df
+import networkx as nx
 
 def run_example(word):
     example = Example(word)
@@ -45,8 +46,12 @@ def cycle_word_analysis(word):
         result = example.get_result()
 
         if result:
-            results.append(result.__dict__)
-            example.plot(index)
+            result_dict = result.__dict__
+            results.append(result_dict)
+
+            fig_num = index
+
+            example.plot(fig_num)
         
 
     df_results = df.DataFrame(results)
@@ -72,7 +77,7 @@ class Sample:
             self.words = generate_all_reduced_words(word_size)
 
     def run_examples(self, session = None):
-        with Pool(11) as pool:
+        with Pool(10) as pool:
             results = pool.map(run_example, self.words)
             
             for result in results:
@@ -97,7 +102,7 @@ class Sample:
         plt.show()
 
 if __name__ == '__main__':
-    cycle_word_analysis("BabbaBaBababAbaBABAbbabA")
+    cycle_word_analysis("BAbababA")
 
 
 

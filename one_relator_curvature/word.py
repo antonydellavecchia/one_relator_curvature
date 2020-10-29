@@ -36,7 +36,7 @@ class Word:
             )
             cycled_word = cycle_word(cycled_word)
 
-        print("hello", cycles)
+
         return cycles
 
     def cycle(self):
