@@ -1,22 +1,22 @@
 from pulp import *
-from one_relator_curvature.circle_intersection import Geometry
-from one_relator_curvature.hyperbolic_plane import (
+from hyperbolic_plane import (
     FiniteGeodesic,
     Segment,
     HyperbolicPlane
 )
-from one_relator_curvature.utils import mobius
-from one_relator_curvature.word_utils import word_inverse
-from one_relator_curvature.punctured_surfaces import punctured_torus
-from one_relator_curvature.cell_complex import (
+from circle_intersection import Geometry
+from utils import mobius
+from word_utils import word_inverse
+from punctured_surfaces import punctured_torus
+from cell_complex import (
     CellComplex,
     ZeroCell,
     HalfEdge,
     Link
 )
-from one_relator_curvature.results import Result
-from one_relator_curvature.word import Word
-from one_relator_curvature.errors import PrecisionError, CyclingError
+from results import Result
+from word import Word
+from errors import PrecisionError, CyclingError
 
 from decimal import *
 import copy
@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import networkx as nx
+import re
 
 class Example:
     def __init__(self, word, surface=punctured_torus):
@@ -92,27 +93,26 @@ class Example:
         self.max_segment = max_segment
         self.segments = segments
 
-    def plot(self, fig_num= 1):
+    def plot(self, fig_num=1):
         fig = plt.figure(fig_num)
         fig.suptitle(f"curvature = {self.curvature}, word = B{self.word}")
         ax = fig.add_subplot(1, 3, 3)
 
-        removed_region_label = self.removed_region.label
-        pos = nx.spring_layout(self.dual_graph, k=0.9)
-        color_map = [
-            "red" if x == removed_region_label else "blue" for x in self.dual_graph.nodes
-        ]
+        if self.is_valid:
+            removed_region_label = self.removed_region.label
+            pos = nx.spring_layout(self.dual_graph, k=0.9)
+            color_map = [
+                "red" if x == removed_region_label else "blue" for x in self.dual_graph.nodes
+            ]
 
-
-        nx.draw(
-            self.dual_graph,
-            pos=pos,
-            node_color=color_map,
-            connectionstyle='arc3, rad = 0.1',
-            ax=ax
-        )
-        
-        plt.axis('off')
+            nx.draw(
+                self.dual_graph,
+                pos=pos,
+                node_color=color_map,
+                connectionstyle='arc3, rad = 0.1',
+                ax=ax
+            )
+            plt.axis('off')
 
         hyperbolic_plane = HyperbolicPlane()
         hyperbolic_plane.tesselate(
@@ -140,6 +140,7 @@ class Example:
                 try:
                     intersection = Geometry().circle_intersection(circle1, circle2)
                 except ValueError:
+                    self.is_valid = False
                     raise PrecisionError
 
                 if intersection != None:
@@ -193,6 +194,7 @@ class Example:
 
                 # add to dict
                 if (start, end) in half_edges or (end, start) in half_edges:
+                    self.is_valid = False
                     raise PrecisionError()
                 
                 half_edges[(start, end)] = half_edge1
@@ -219,6 +221,7 @@ class Example:
 
                 if (universal_geodesic.bounds[0], first_lift) in half_edges or \
                    (universal_geodesic.bounds[1], last_lift) in half_edges:
+                    self.is_valid = False
                     raise PrecisionError()
                 
                 half_edges[(universal_geodesic.bounds[0], first_lift)] = half_edge1
@@ -270,9 +273,11 @@ class Example:
     def set_regions(self):
         half_edges = self.half_edges.values()
         if len(set(map(lambda x: x.nxt.label, half_edges))) != len(half_edges):
+            self.is_valid = False
             raise PrecisionError()
 
-        self.regions = CellComplex(half_edges).regions
+        self.cell_complex = CellComplex(half_edges)
+        self.regions = self.cell_complex.regions
 
     def set_removed_region(self):
         universal_geodesic = self.universal_geodesic
@@ -320,6 +325,7 @@ class Example:
                     self.removed_region = half_edge.region
 
                 except(KeyError):
+                    self.is_valid = False
                     raise PrecisionError()
 
     def generate_links(self):
@@ -358,11 +364,10 @@ class Example:
         print('set_regions')
         self.set_regions()
 
-
         print('set removed regions')
         self.set_removed_region()
 
-        if self.removed_region:
+        if self.removed_region is not None:
             print("generate links")
             self.is_valid = True
             self.generate_links()
@@ -377,7 +382,6 @@ class Example:
         for region in self.regions:
             first_node = region.label
             target_nodes = [x.flip.region.label for x in region.half_edges]
-            print(first_node, target_nodes)
             for node in target_nodes:
                 if (node, first_node) in edge_set:
                     continue
@@ -438,31 +442,20 @@ class Example:
 
         prob += objective, "minimize attaching disc"
 
-
         for equation in link_equations:
             prob += equation[0] >= equation[1]
 
         for equation in region_equations:
             prob += equation[0] <= equation[1]
 
-        print(pd.DataFrame(prob.to_dict()["constraints"]))
         prob.writeLP("example_system.lp")
         prob.solve()
-        
-        #print("status:", LpStatus[prob.status])
+
         self.curvature = value(prob.objective) - (len(self.attaching_disc) - 2)
 
         angle_labels = list(map(lambda x: x.name, prob.variables()))
         angles = list(map(lambda x: x.varValue, prob.variables()))
         self.angle_assignments = dict(zip(angle_labels, angles))
-
-    def set_vertex_weights(self):
-        points = list(map(lambda x: x.zero_cell.point, self.links))
-        labels = list(map(lambda x: x.get_labels(), self.links))
-        get_weight = lambda x: self.angle_assignments[x] if x in self.angle_assignments else 0
-        weights = list(map(lambda x: sum(map(lambda y: get_weight(y), x)), labels))
-        
-        #print(dict(zip(points, weights)))
 
     def get_result(self):
         try:
@@ -476,16 +469,13 @@ class Example:
             return None
 
     def run(self):
-        cell_complex_generated = False
-        word_length = len(self.word)
-        
         try:
             print(f"***** running example B{self.word.word} *****")
             print('** generating cell complex **')
             self.generate_cell_complex()
-            cell_complex_generated = True
 
         except PrecisionError:
+            self.is_valid = False
             print("PrecisionError")
             return
 
@@ -494,7 +484,7 @@ class Example:
         if not self.is_valid:
             return
         
-        if self.check_euler() == False:
+        if not self.check_euler():
             self.is_valid = False
             return
 
@@ -504,33 +494,57 @@ class Example:
         
         self.find_angle_assignments()
 
-        print('assigning')
-        self.set_vertex_weights()
-
         print("Example curvature:", self.curvature)
 
         self.is_valid = True
 
         print("*** generating dual graph")
         self.generate_dual_graph()
-        
+
+    def get_polytope(self):
+        """
+        return polytope of equations without as an array reprsenting the inequalities the define it
+        and in the form that is accepted by polymake
+        """
+        num_region_angles = len(self.cell_complex.half_edges)
+        num_disc_angles = 2 * len(self.links)
+        inequality_size = num_region_angles + num_disc_angles + 1
+        inequalities = []
+
+        for region in self.regions:
+            if region == self.removed_region:
+                continue
+            inequality = np.zeros(inequality_size)
+            region_angles = region.get_equation()
+            for index in region_angles:
+                inequality[index + 1] = -1
+
+            inequality[0] = len(region_angles) - 2
+            inequalities.append(inequality)
+
+        for link in self.links:
+            for equation in link.get_equations():
+                inequality = np.zeros(inequality_size)
+                inequality[0] = - equation["constant"]
+
+                for label in equation["labels"]:
+                    if label != "none":
+                        if "disc" in label:
+                            label_integers = re.findall('\d+', label)
+                            label_index = 1 + num_region_angles + int(label_integers[0]) * 2 \
+                                + (int(label_integers[1]) % 2)
+                            inequality[label_index] = 1
+                        else:
+                            inequality[1 + int(label)] = 1
+
+                inequalities.append(inequality)
+
+                    
+        return np.array(inequalities)
+
+
 if __name__ == '__main__':
-    #example = Example('BBBAA', surface=punctured_torus)
-    #example = Example('BBABa', surface=punctured_torus)
-    #example = Example('BBAba', surface=punctured_torus)
-    #example = Example('BabbaBBaBaa', surface=punctured_torus)
-    #example = Example('BBABBaabAbaaBBaBaaBaB', surface=punctured_torus)
-
-    #example = Example('BABBABABAB', surface=punctured_torus)
-    #example = Example('BBABabAAA')
-    #example = Example('BBaBAbaa') #important
-    #example = Example('BAAbbaaBBA')
-    #example = Example('BABABBAb', surface=punctured_torus)
-
-    #crisp
-    #example = Example('Babba')
-
-    example = Example('BaBAbaBABaBaB')
+    example = Example('BBaabbABBa')
     example.run()
     example.plot()
     plt.show()

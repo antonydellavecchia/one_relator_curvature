@@ -1,10 +1,10 @@
 from collections import Counter
-from one_relator_curvature.utils import mobius
-from one_relator_curvature.word_utils import word_inverse, cycle_word, convert_to_runnable
-from one_relator_curvature.errors import CyclingError
+from utils import mobius
+from word_utils import word_inverse, cycle_word, convert_to_runnable
+
 
 class Word:
-    def __init__(self, word, matrices = None):
+    def __init__(self, word, matrices=None):
         """Initiate word without the leading B"""
         self.word = word
         self.matrices = matrices
@@ -35,7 +35,6 @@ class Word:
                 convert_to_runnable(cycled_word)
             )
             cycled_word = cycle_word(cycled_word)
-
 
         return cycles
 

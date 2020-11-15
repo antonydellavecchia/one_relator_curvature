@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine
-from one_relator_curvature.results import Base
-from one_relator_curvature.results import Result
+from results import Base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-engine = create_engine("sqlite:///exampleso.db")
+engine = create_engine("sqlite:////home/antony/one_relator_curvature/exampleso.db")
 Session = sessionmaker(bind=engine)
+
 
 def recreate_database():
     Base.metadata.drop_all(engine)

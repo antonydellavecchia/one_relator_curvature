@@ -1,6 +1,6 @@
 from database import session_scope
-from one_relator_curvature.results import Result
-from one_relator_curvature.word import Word
+from results import Result
+from word import Word
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -13,6 +13,16 @@ def plot_intersections_curvature(punctured_region_size):
         df.plot.scatter(x="intersections", y="curvature")
         plt.show()
 
+def plot_examples(examples):
+    for (index, example) in enumerate(examples):
+        example.plot(index)
+
+    plt.show()
+
+def plot_results(results):
+    df = pd.DataFrame(results)
+
+    df["min_curvature"].plot.hist()
 
 def plot_min_cycled(words):
     with session_scope() as s:
@@ -29,8 +39,3 @@ def plot_min_cycled(words):
 
 if __name__ == "__main__":
     plot_min_cycled(["BABABABaabA"])
-
-
-
-
-

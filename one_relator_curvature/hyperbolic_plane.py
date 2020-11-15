@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 import numpy as np
 import copy
-from one_relator_curvature.circle_intersection import Geometry
-from one_relator_curvature.errors import PrecisionError
-from one_relator_curvature.utils import (
+from circle_intersection import Geometry
+from errors import PrecisionError
+from utils import (
     mobius,
     upper_to_disc,
     complex_to_vector,

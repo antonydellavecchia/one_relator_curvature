@@ -1,32 +1,12 @@
-from one_relator_curvature.hyperbolic_plane import HyperbolicPlane
-from one_relator_curvature.punctured_surfaces import punctured_torus
-from one_relator_curvature.word_utils import generate_random_word, generate_all_reduced_words
-from one_relator_curvature.example import Example
-from one_relator_curvature.word import Word
-from one_relator_curvature.errors import CyclingError
-from one_relator_curvature.results import Result
-from one_relator_curvature.decorators import timeit
-
-from multiprocessing import Pool
-from functools import partial
+from hyperbolic_plane import HyperbolicPlane
+from punctured_surfaces import punctured_torus
+from word_utils import generate_random_word
+from plotting import plot_examples, plot_results
+from example import Example
+from word import Word
 import matplotlib.pyplot as plt
-import random
 import pandas as df
-import networkx as nx
 
-def run_example(word):
-    example = Example(word)
-
-    try:
-        example.run()
-        if example.is_valid and example.removed_region:
-            return example.get_result()
-        else:
-            return None
-
-    except CyclingError:
-        print("cycling error")
-        return None
 
 def word_generator(word_size, num_of_words):
     word_number = 0
@@ -35,11 +15,12 @@ def word_generator(word_size, num_of_words):
         yield generate_random_word(word_size)
         word_number += 1
 
-def cycle_word_analysis(word):
+
+def get_cycle_word_analysis(word):
     word_object = Word(word[1:])
     words = word_object.get_cyles()
     results = []
-    
+
     for index, example_word in enumerate(words):
         example = Example(example_word)
         example.run()
@@ -49,44 +30,51 @@ def cycle_word_analysis(word):
             result_dict = result.__dict__
             results.append(result_dict)
 
-            fig_num = index
-
-            example.plot(fig_num)
-        
-
     df_results = df.DataFrame(results)
     del df_results["_sa_instance_state"]
 
-    print(df_results)
-    
-    plt.show()
+    return {
+        "min_curvature": df_results["curvature"].min(),
+        "max_curvature": df_results["curvature"].max(),
+        "bias": 1 - (len(results) / len(words))
+    }
     
 class Sample:
-    def __init__(self, word_size, surface=punctured_torus, sample_size = None):
+    def __init__(self, word_size, sample_size, surface=punctured_torus, cyclic=False): 
         """
-        
+        Run a sample of randomly generated words of a given sample size
         """
         self.sample_size = sample_size
         self.word_size = word_size
         self.surface = surface
-        self.examples = []
-        
-        if sample_size:
-            self.words = word_generator(word_size, sample_size)
+        self.words = word_generator(word_size, sample_size)
+        self.cyclic = cyclic
+
+    def get_examples(self):
+        examples = []
+        for word in self.words:
+            example = Example(word)
+            example.run()
+
+            if example.is_valid:
+                examples.append(example)
+
+        return examples
+
+    def get_results(self):
+        results = []
+        if self.cyclic:
+            for word in self.words:
+                analysis = get_cycle_word_analysis(word)
+                results.append(analysis)
+                
         else:
-            self.words = generate_all_reduced_words(word_size)
+            results = [x.get_result() for x in self.get_examples()]
 
-    def run_examples(self, session = None):
-        with Pool(10) as pool:
-            results = pool.map(run_example, self.words)
-            
-            for result in results:
-                if result:
-                    session.add(result)
+        return results
 
-        session.commit()
-        
     def plot(self):
+        # not sure if i'll need this again so i am not fixing it yet
         hyperbolic_plane = HyperbolicPlane()
         hyperbolic_plane.tesselate(
             self.surface['fundamental_domain'],
@@ -95,14 +83,19 @@ class Sample:
         hyperbolic_plane.geodesics.extend(self.example_geodesics)
         hyperbolic_plane.plot_upper_half()
         hyperbolic_plane.plot_disc()
-        curvature = list(map(lambda x: x[1], self.stats))
 
-        ax.axis([-5, 5, 0, 10])
-        
         plt.show()
 
 if __name__ == '__main__':
-    cycle_word_analysis("BAbababA")
+    #cycle_word_analysis("BAbababA")
+    sample = Sample(13, 100, cyclic=True)
+    #examples = sample.get_examples()
+    #plot_examples(examples)
+    results = sample.get_results()
+    plot_results(results)
+        
+    plt.show()
+    
 
 
 

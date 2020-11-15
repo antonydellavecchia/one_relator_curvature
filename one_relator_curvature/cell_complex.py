@@ -279,6 +279,7 @@ class Region:
     
 class CellComplex:
     def __init__(self, half_edges):
+        self.half_edges = half_edges
         self.regions = []
         label = 0
 

@@ -7,12 +7,13 @@ import argparse
 from one_relator_curvature.decorators import timeit
 
 def main():
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Process some regular sectional curvature for one relator groups')
     parser.add_argument(
         "--word-size-range",
         type=int,
         nargs="+",
-        help='range of word sizes to run examples on')
+        help='range of word sizes to run examples on'
+    )
 
     args = parser.parse_args()
     word_sizes = range(*args.word_size_range)

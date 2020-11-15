@@ -1,4 +1,4 @@
-from one_relator_curvature.decorators import timeit
+from decorators import timeit
 import random
 import copy
 from itertools import product
