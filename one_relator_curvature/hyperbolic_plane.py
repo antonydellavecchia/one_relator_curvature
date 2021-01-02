@@ -4,6 +4,7 @@ import numpy as np
 import copy
 from circle_intersection import Geometry
 from errors import PrecisionError
+from mpmath import mpf
 from utils import (
     mobius,
     upper_to_disc,
@@ -42,15 +43,15 @@ class HyperbolicPlane:
 
             iteration_number += 1
 
-    def plot_upper_half(self, fig_num = 1):
+    def plot_upper_half(self, fig_num=1):
         fig = plt.figure(fig_num)
         ax = fig.add_subplot(1, 3, 1)
 
         for geodesic in self.geodesics:
             geodesic.plot_upper_half(ax)
 
-        x_coords = [x.real for x in self.points]
-        y_coords = [x.imag for x in self.points]
+        x_coords = [float(x.real) for x in self.points]
+        y_coords = [float(x.imag) for x in self.points]
         ax.scatter(x_coords, y_coords)
 
         plt.axis([-2, 2, 0, 8])
@@ -64,8 +65,8 @@ class HyperbolicPlane:
         for geodesic in self.geodesics:
             geodesic.plot_disc(ax)
 
-        x_coords = list(map(lambda x: upper_to_disc(x).real, self.points))
-        y_coords = list(map(lambda x: upper_to_disc(x) .imag, self.points))
+        x_coords = [float(x.real) for x in self.points]
+        y_coords = [float(x.imag) for x in self.points]
         ax.scatter(x_coords, y_coords)
 
         plt.axis([-2, 2, -2, 2])
@@ -112,7 +113,7 @@ class Geodesic:
         )
         
         if abs(np.dot(perp_vec1, perp_vec2)) == 1:
-            return np.inf
+            return float("inf")
 
         intersection = np.dot(
             boundary_point1 - boundary_point2,
@@ -123,34 +124,38 @@ class Geodesic:
         return center[0] + center[1] * 1j
 
     def plot_disc(self, ax):
-        roots = list(map(complex_to_vector, self.get_roots_disc()))
-        center = self.get_center_disc()
-        if center.real == np.inf:
-            x_coords = list(map(lambda x: x[0], roots))
-            y_coords = list(map(lambda x: x[1], roots))
+        roots = [complex_to_vector(x) for x in self.get_roots_disc()]
+        center = complex(self.get_center_disc())
+        
+        if center.real == float("inf"):
+            x_coords = [float(x[0]) for x in roots]
+            y_coords = [float(x[1]) for x in roots]
             ax.plot(x_coords, y_coords)
 
         else:
-            theta1, theta2 = get_arc(center, self.get_roots_disc())
-                
-            radius = np.linalg.norm([center.real, center.imag] - roots[0])
+            roots = [complex(x) for x in self.get_roots_disc()]
+            theta1, theta2 = get_arc(center, roots)
+            root1 = roots[0]
+            radius = float(np.linalg.norm([
+                center.real - root1.real, center.imag - root1.imag
+            ]))
             arc = patches.Arc(
                 (center.real, center.imag),
                 2 * radius, 2 * radius,
                 0.0,
-                theta1,
-                theta2,
+                float(theta1),
+                float(theta2),
                 color=self.color
             )
             ax.add_patch(arc)
  
     def plot_upper_half(self, ax):
-        center = self.get_center()
-        radius = self.get_radius()
+        center = complex(self.get_center())
+        radius = float(self.get_radius())
         
         if radius == float('inf'):
-            non_inf_root = list(filter(lambda x: x < float('inf'), self.roots))
-            ax.axvline(x=non_inf_root, color=self.color)
+            non_inf_root = [float(x)  for x in self.roots if float(x) < float('inf')]
+            ax.axvline(x=non_inf_root[0], color=self.color)
 
         else:
             circ = plt.Circle((center.real, center.imag), radius, color=self.color, fill=False)
@@ -179,9 +184,13 @@ class FiniteGeodesic(Geodesic):
         self.theta1 = None
         self.theta2 = None
 
+    def __str__(self):
+        return f"roots: {str(self.roots)},  bounds: {str(self.bounds)}"
+
+
     def mobius(self, a):
-        self.roots = tuple(map(lambda x: mobius(a,x), self.roots))
-        self.bounds = tuple(map(lambda x: mobius(a,x), self.bounds))
+        self.roots = tuple(map(lambda x: mobius(a, x), self.roots))
+        self.bounds = tuple(map(lambda x: mobius(a, x), self.bounds))
         self.set_arc()
         
     def set_arc(self):
@@ -196,22 +205,22 @@ class FiniteGeodesic(Geodesic):
 
     def plot_upper_half(self, ax):
         self.set_arc()
-        center = self.get_center()
-        radius = self.get_radius()
+        center = complex(self.get_center())
+        radius = float(self.get_radius())
         theta1, theta2 = self.theta
         arc = patches.Arc(
             (center.real, center.imag),
             2 * radius, 2 * radius,
             0.0,
-            theta1,
-            theta2,
+            float(theta1),
+            float(theta2),
             color=self.color
         )
         ax.add_patch(arc)
 
     def plot_disc(self, ax):
-        center = self.get_center_disc()
-        points = list(map(lambda x: upper_to_disc(x), self.bounds))
+        center = complex(self.get_center_disc())
+        points = [complex(upper_to_disc(x)) for x in self.bounds]
         radius = abs(center - points[0])
         theta1, theta2 = get_arc(center, points)
         arc = patches.Arc(
@@ -219,8 +228,8 @@ class FiniteGeodesic(Geodesic):
             2 * radius,
             2 * radius,
             0.0,
-            theta1,
-            theta2,
+            float(theta1),
+            float(theta2),
             color=self.color
         )
         ax.add_patch(arc)
@@ -237,45 +246,44 @@ class Segment(FiniteGeodesic):
 
         # bounds are intersection
         bounds = []
-        for geodesic in fundamental_domain.boundary:
+        for boundary_geodesic in fundamental_domain.boundary:
             path_center = path.get_center().real
             path_radius = path.get_radius()
 
-            if geodesic.roots[0] == np.inf:
-                x_coord = geodesic.roots[1]
+            if boundary_geodesic.roots[0] == mpf("inf"):
+                boundary_x = boundary_geodesic.roots[1]
 
                 # checks for intersection
-                y_squared = path_radius ** 2 - (x_coord - path_center) ** 2
+                y_squared = path_radius ** 2 - (boundary_x - path_center) ** 2
                 if y_squared > 0:
-                    y_coord = np.sqrt(y_squared)
-                    intersection = x_coord + y_coord * 1j
+                    y_coord = y_squared ** 0.5
+                    intersection = boundary_x + y_coord * 1j
 
                     bounds.append(intersection)
 
-            elif geodesic.roots[1] == np.inf:
-                x_coord = geodesic.roots[0]
+            elif boundary_geodesic.roots[1] == mpf("inf"):
+                boundary_x = boundary_geodesic.roots[0]
 
                 # checks for intersection
-                y_squared = path_radius ** 2 - (x_coord - path_center) ** 2
+                y_squared = path_radius ** 2 - (boundary_x - path_center) ** 2
                 if y_squared > 0:
-                    y_coord = np.sqrt(y_squared)
-                    intersection = x_coord + y_coord * 1j
+                    y_coord = y_squared ** 0.5
+                    intersection = boundary_x + y_coord * 1j
 
                     bounds.append(intersection)
             else:
-                geodesic_radius = geodesic.get_radius()
-                geodesic_center = geodesic.get_center().real
-                geodesic_circle = (geodesic_center, 0, geodesic_radius)
+                boundary_geodesic_radius = boundary_geodesic.get_radius()
+                boundary_geodesic_center = boundary_geodesic.get_center().real
+                boundary_geodesic_circle = (boundary_geodesic_center, 0, boundary_geodesic_radius)
                 path_circle = (path_center, 0, path_radius)
                 intersection = Geometry().circle_intersection(
-                    geodesic_circle,
+                    boundary_geodesic_circle,
                     path_circle
                 )
-                
                 if intersection is not None:
                     intersection = intersection[0] + 1j * intersection[1]
                     bounds.append(intersection)
-        
+
         # catch precision error
         if len(bounds) != 2:
             print('error finding segment')
@@ -325,7 +333,7 @@ class Domain:
 
             
 if __name__ == '__main__':
-    roots = [(np.inf,  -1.0), (-1.0, 0.0), (0.0, 1.0), (np.inf, 1.0)]
+    roots = [(mpf("inf"),  -1.0), (-1.0, 0.0), (0.0, 1.0), (mpf("inf"), 1.0)]
     bounds = list(map(lambda x: Geodesic(x[0], x[1]), roots))
     fundamental_domain = Domain(bounds)
     hyperbolic_plane = HyperbolicPlane()

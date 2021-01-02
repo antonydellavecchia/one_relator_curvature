@@ -7,20 +7,21 @@ from hyperbolic_plane import (
 from utils import mobius, upper_to_disc, disc_to_upper
 import numpy as np
 import copy
+from mpmath import mp, mpf, mpc
+mp.dps = 150000
 
-roots = [(np.inf,  -1.0), (-1.0, 0.0), (0.0, 1.0), (np.inf, 1.0)]
-bounds = list(map(lambda x: Geodesic(x[0], x[1]), roots))
+roots = [(mpf("inf"), mpf(-1)), (mpf(-1), mpf(0)), (mpf(0), mpf(1)), (mpf("inf"), mpf(1))]
+bounds = [Geodesic(x[0], x[1]) for x in roots]
 torus_fundamental_domain = Domain(bounds)
 
 punctured_torus = {
     'fundamental_domain': torus_fundamental_domain,
-    #'initial_point': N(-0.5 + 0.5j, 10),
-    'initial_point': -0.5 + 0.5j,
+    'initial_point': mpc(-1, 1) / mpf(2),
     'mobius_transformations': {
-        'a': np.array([[1, 1], [1, 2]]), 
-        'b': np.array([[1, -1], [-1, 2]]),
-        'A': np.array([[2, -1], [-1, 1]]),
-        'B': np.array([[2, 1], [1, 1]])
+        'a': np.array([[mpf(1), mpf(1)], [mpf(1), mpf(2)]]), 
+        'b': np.array([[mpf(1), mpf(-1)], [mpf(-1), mpf(2)]]),
+        'A': np.array([[mpf(2), mpf(-1)], [mpf(-1), mpf(1)]]),
+        'B': np.array([[mpf(2), mpf(1)], [mpf(1), mpf(1)]])
     }
 }
 

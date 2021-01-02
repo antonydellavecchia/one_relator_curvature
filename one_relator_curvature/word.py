@@ -1,7 +1,7 @@
 from collections import Counter
 from utils import mobius
 from word_utils import word_inverse, cycle_word, convert_to_runnable
-
+import numpy as np
 
 class Word:
     def __init__(self, word, matrices=None):
@@ -14,9 +14,11 @@ class Word:
     # transforms point by word
     def transformation(self, z):
         """transforms point by word"""
+        matrix = np.array([[1, 0], [0, 1]])
         for element in reversed(self.word):
-            matrix = self.matrices[element]
-            z = mobius(matrix, z)
+            matrix = np.matmul(self.matrices[element], matrix)
+
+        z = mobius(matrix, z)
             
         return z
 
@@ -28,7 +30,7 @@ class Word:
 
     def get_cyles(self):
         cycled_word = f"B{self.word}"
-        cycles = []
+        cycles = [cycled_word]
 
         for _ in range(len(self.word)):
             cycles.append(

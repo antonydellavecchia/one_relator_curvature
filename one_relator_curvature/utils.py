@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import permutations
 import copy
+from mpmath import mpf, atan, degrees, pi
 
 def equivalence_class(word, generators = ['a', 'b']):
     extended_generators = copy.deepcopy(generators)
@@ -48,17 +49,38 @@ def complex_to_vector(z):
     return np.array([z.real, z.imag])
 
 def mobius(a, z):
-    if z == np.inf:
+    if z == mpf("inf"):
         return a[0][0] * (1.0 / a[1][0])
 
     elif a[1][0] * z + a[1][1] == 0:
-        return np.inf
+        return mpf("inf")
     
     return (a[0][0] * z + a[0][1]) / (a[1][0] * z + a[1][1])
 
+def get_angle(complex_number, deg=False):
+    atan_angle = None
+    
+    if complex_number.real == 0:
+        if complex_number.imag > 0:
+            atan_angle = atan(mpf("inf"))
+        else:
+            atan_angle = atan(mpf("-inf"))
+    
+    else:
+        atan_angle = atan(complex_number.imag / complex_number.real)
 
+    if complex_number.real < 0:
+        atan_angle += pi
+
+    if deg:
+        angle = degrees(atan_angle)
+
+        return angle
+
+    return atan_angle
+    
 def get_arc(center, points):
-    angles_roots = list(map(lambda x: np.angle(x - center, deg=True), points))
+    angles_roots = [get_angle(x - center, True) for x in points]
     angles_roots.sort()
     theta1, theta2 = angles_roots
 

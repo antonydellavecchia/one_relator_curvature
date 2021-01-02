@@ -5,7 +5,7 @@ from hyperbolic_plane import (
     HyperbolicPlane
 )
 from circle_intersection import Geometry
-from utils import mobius
+from utils import mobius, get_angle
 from word_utils import word_inverse
 from punctured_surfaces import punctured_torus
 from cell_complex import (
@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import re
+from mpmath import mp, mpf, atan
 
 class Example:
     def __init__(self, word, surface=punctured_torus):
@@ -36,6 +37,7 @@ class Example:
         self.fundamental_domain = surface['fundamental_domain']
         self.mobius_transformations = mobius_transformations
         self.path_start = surface['initial_point']
+
         self.identified_start = mobius(
             mobius_transformations['B'],
             self.path_start
@@ -49,8 +51,8 @@ class Example:
         )
         self.removed_region = None
         self.curvature = None
-        self.is_valid = True
-
+        self.is_valid = False
+        
     def cycle_word(self):
         self.word.cycle()
         print(f"finding path end with {str(self.word)}")
@@ -120,6 +122,7 @@ class Example:
             self.mobius_transformations.values()
         )
         hyperbolic_plane.geodesics.extend(self.segments)
+        #hyperbolic_plane.geodesics.append(self.universal_geodesic)
         hyperbolic_plane.plot_upper_half(fig_num)
         hyperbolic_plane.plot_disc(fig_num)
 
@@ -160,7 +163,7 @@ class Example:
 
     def set_sorted_lifts(self):
         # sort 0 - cell lifts in order or increasing order on the universal geodesic
-        sorted_lifts = sorted(self.zero_cells, key = lambda key: np.angle(key))
+        sorted_lifts = sorted(self.zero_cells, key=get_angle)
         self.sorted_lifts = list(reversed(sorted_lifts))
 
         # set lift index
@@ -193,7 +196,8 @@ class Example:
                 half_edge2.set_flip(half_edge1)
 
                 # add to dict
-                if (start, end) in half_edges or (end, start) in half_edges:
+                if (start, end) in half_edges or (end, start) in half_edges.keys():
+                    print("half_edge tuple already exists")                    
                     self.is_valid = False
                     raise PrecisionError()
                 
@@ -219,8 +223,9 @@ class Example:
                 half_edge1.set_flip(half_edge2)
                 half_edge2.set_flip(half_edge1)
 
-                if (universal_geodesic.bounds[0], first_lift) in half_edges or \
-                   (universal_geodesic.bounds[1], last_lift) in half_edges:
+                if (universal_geodesic.bounds[0], first_lift) in half_edges.keys() or \
+                   (universal_geodesic.bounds[1], last_lift) in half_edges.keys():
+                    print("half_edge tuple already exists")
                     self.is_valid = False
                     raise PrecisionError()
                 
@@ -247,7 +252,9 @@ class Example:
 
             # get direction along universal geodesic 
             #if distance_to_center.compare(Decimal(radius)**2) == -1:
-            if distance_to_center - radius**2 < 0:
+            comparison = distance_to_center - radius**2
+
+            if comparison < 0:
                 next_index = index - 1
             
             else:
@@ -264,15 +271,19 @@ class Example:
 
             else:
                 next_half_edge = half_edges[(sorted_lifts[index], sorted_lifts[next_index])]
-                                
+
             half_edge.set_next(next_half_edge)
 
-
+            
         self.half_edges = half_edges
 
     def set_regions(self):
         half_edges = self.half_edges.values()
-        if len(set(map(lambda x: x.nxt.label, half_edges))) != len(half_edges):
+        unique_half_edges = set([x.nxt.label for x in half_edges])
+        half_edge_lables = [x.label for x in half_edges]
+        half_edge_lables.sort()
+
+        if len(unique_half_edges) != len(half_edges):
             self.is_valid = False
             raise PrecisionError()
 
@@ -305,9 +316,9 @@ class Example:
             key = (segment_start, segment_end)
 
             # center has no imag part
-            segment_start_phase = np.angle(segment_start - center.real)
-            segment_end_phase = np.angle(segment_end - center.real)
-            test_point_phase = np.angle(test_point - center.real)
+            segment_start_phase = get_angle(segment_start - center.real)
+            segment_end_phase = get_angle(segment_end - center.real)
+            test_point_phase = get_angle(test_point - center.real)
 
             # checks if test_point lies within phase range of segment
             if segment_start_phase >= test_point_phase and segment_end_phase <= test_point_phase:
@@ -503,19 +514,25 @@ class Example:
 
     def get_polytope(self):
         """
-        return polytope of equations without as an array reprsenting the inequalities the define it
+        return polytope of equations as an array of inequalities
         and in the form that is accepted by polymake
         """
         num_region_angles = len(self.cell_complex.half_edges)
         num_disc_angles = 2 * len(self.links)
         inequality_size = num_region_angles + num_disc_angles + 1
         inequalities = []
+        disc_inequality = np.concatenate((
+            [num_disc_angles - 2],
+            np.zeros(num_region_angles),
+            - np.ones(num_disc_angles)
+        ))
 
         for region in self.regions:
             if region == self.removed_region:
                 continue
             inequality = np.zeros(inequality_size)
             region_angles = region.get_equation()
+
             for index in region_angles:
                 inequality[index + 1] = -1
 
@@ -539,12 +556,13 @@ class Example:
 
                 inequalities.append(inequality)
 
-                    
-        return np.array(inequalities)
+        return {
+            "constraints": np.array(inequalities).tolist(),
+            "disc": disc_inequality.tolist()
+        }
 
 
 if __name__ == '__main__':
-    example = Example('BBaabbABBa')
+    example = Example('BAbbAbabbABaa')
     example.run()
-    example.plot()
-    plt.show()
+    

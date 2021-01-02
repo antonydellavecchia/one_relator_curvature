@@ -1,4 +1,5 @@
 import numpy as np
+from utils import get_angle
 
 
 class ZeroCell:
@@ -20,7 +21,7 @@ class ZeroCell:
         # order segments by order of appearance while follow geodesic in universal
         # cover starting from point in fundamental domain
         # may be better to compare with angles if geodesic is large
-        if np.angle(lift1) > np.angle(lift2):
+        if get_angle(lift1) > get_angle(lift2):
             self.lifts = (lift1, lift2)
             self.segments = (segment1, segment2) 
 
