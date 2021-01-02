@@ -284,6 +284,7 @@ class CellComplex:
         self.regions = []
         label = 0
 
+        print(half_edges)
         for half_edge in half_edges:
             if half_edge.region is None:
                 region = Region(label)

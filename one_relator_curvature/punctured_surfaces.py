@@ -8,7 +8,7 @@ from utils import mobius, upper_to_disc, disc_to_upper
 import numpy as np
 import copy
 from mpmath import mp, mpf, mpc
-mp.dps = 150000
+mp.dps = 15000
 
 roots = [(mpf("inf"), mpf(-1)), (mpf(-1), mpf(0)), (mpf(0), mpf(1)), (mpf("inf"), mpf(1))]
 bounds = [Geodesic(x[0], x[1]) for x in roots]
