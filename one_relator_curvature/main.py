@@ -18,7 +18,7 @@ def main():
         description="Process some regular sectional curvature for one relator groups"
     )
     parser.add_argument(
-        "--word-size",
+        "--word-size-range",
         type=int,
         nargs="+",
         help="range of word sizes to run examples on",
