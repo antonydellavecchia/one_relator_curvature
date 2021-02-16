@@ -20,7 +20,8 @@ def main():
     parser.add_argument(
         "--word-size",
         type=int,
-        help="word size to run examples on",
+        nargs="+",
+        help="range of word sizes to run examples on",
     )
 
     parser.add_argument(
