@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String, Float
 
 Base = declarative_base()
 
-
 class Result(Base):
     __tablename__ = 'results'
     id = Column(Integer, primary_key=True)

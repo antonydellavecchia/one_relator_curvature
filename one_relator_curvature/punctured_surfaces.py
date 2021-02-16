@@ -8,22 +8,25 @@ from utils import mobius, upper_to_disc, disc_to_upper
 import numpy as np
 import copy
 from mpmath import mp, mpf, mpc
-mp.dps = 15000
 
-roots = [(mpf("inf"), mpf(-1)), (mpf(-1), mpf(0)), (mpf(0), mpf(1)), (mpf("inf"), mpf(1))]
-bounds = [Geodesic(x[0], x[1]) for x in roots]
-torus_fundamental_domain = Domain(bounds)
 
-punctured_torus = {
-    'fundamental_domain': torus_fundamental_domain,
-    'initial_point': mpc(-1, 1) / mpf(2),
-    'mobius_transformations': {
-        'a': np.array([[mpf(1), mpf(1)], [mpf(1), mpf(2)]]), 
-        'b': np.array([[mpf(1), mpf(-1)], [mpf(-1), mpf(2)]]),
-        'A': np.array([[mpf(2), mpf(-1)], [mpf(-1), mpf(1)]]),
-        'B': np.array([[mpf(2), mpf(1)], [mpf(1), mpf(1)]])
+def get_punctured_torus(precision=15):
+    mp.dps = precision
+    roots = [(mpf("inf"), mpf(-1)), (mpf(-1), mpf(0)), (mpf(0), mpf(1)), (mpf("inf"), mpf(1))]
+    bounds = [Geodesic(x[0], x[1]) for x in roots]
+    torus_fundamental_domain = Domain(bounds)
+
+    return {
+        'fundamental_domain': torus_fundamental_domain,
+        'initial_point': mpc(-1, 1) / mpf(2),
+        'mobius_transformations': {
+            'a': np.array([[mpf(1), mpf(1)], [mpf(1), mpf(2)]]), 
+            'b': np.array([[mpf(1), mpf(-1)], [mpf(-1), mpf(2)]]),
+            'A': np.array([[mpf(2), mpf(-1)], [mpf(-1), mpf(1)]]),
+            'B': np.array([[mpf(2), mpf(1)], [mpf(1), mpf(1)]])
+        }
     }
-}
+
 
 roots = [(-1.8740320488976423, -1.0000000000000002),
          (-1.0000000000000002, -0.5336088038559573),

@@ -3,6 +3,7 @@ from utils import mobius
 from word_utils import word_inverse, cycle_word, convert_to_runnable
 import numpy as np
 
+
 class Word:
     def __init__(self, word, matrices=None):
         """Initiate word without the leading B"""
@@ -28,12 +29,12 @@ class Word:
     def __len__(self):
         return len(str(self)) + 1
 
-    def get_cyles(self):
+    def get_cycles(self):
         cycled_word = f"B{self.word}"
-        cycles = [cycled_word]
+        cycles = {cycled_word}
 
         for _ in range(len(self.word)):
-            cycles.append(
+            cycles.add(
                 convert_to_runnable(cycled_word)
             )
             cycled_word = cycle_word(cycled_word)

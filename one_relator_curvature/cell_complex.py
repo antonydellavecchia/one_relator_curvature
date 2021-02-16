@@ -20,7 +20,6 @@ class ZeroCell:
 
         # order segments by order of appearance while follow geodesic in universal
         # cover starting from point in fundamental domain
-        # may be better to compare with angles if geodesic is large
         if get_angle(lift1) > get_angle(lift2):
             self.lifts = (lift1, lift2)
             self.segments = (segment1, segment2) 
@@ -74,13 +73,13 @@ class ZeroCell:
         else:
             print('error getting lift index')
 
-            
 class HalfEdge:
     def __init__(self, label):
         self.label = label
         self.nxt = None
         self.flip = None
         self.region = None
+        
 
     def set_next(self, half_edge):
         self.nxt = half_edge
@@ -284,7 +283,6 @@ class CellComplex:
         self.regions = []
         label = 0
 
-        print(half_edges)
         for half_edge in half_edges:
             if half_edge.region is None:
                 region = Region(label)

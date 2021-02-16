@@ -7,7 +7,7 @@ from hyperbolic_plane import (
 from circle_intersection import Geometry
 from utils import mobius, get_angle
 from word_utils import word_inverse
-from punctured_surfaces import punctured_torus
+from punctured_surfaces import get_punctured_torus
 from cell_complex import (
     CellComplex,
     ZeroCell,
@@ -27,11 +27,14 @@ import networkx as nx
 import re
 from mpmath import mp, mpf, atan
 
+
 class Example:
-    def __init__(self, word, surface=punctured_torus):
+    def __init__(self, word, precision=15, color="red"):
         """
-        
+        Example class used for seting up and running an example
+        on punctured torus
         """
+        surface = get_punctured_torus(precision)
         mobius_transformations = surface['mobius_transformations']
         self.word = Word(word[1:], mobius_transformations)
         self.fundamental_domain = surface['fundamental_domain']
@@ -43,15 +46,18 @@ class Example:
             self.path_start
         )
 
-        # maps start point to point on B inverse side and then map by word to get endpoint
+        # maps start point to point on B inverse side and then
+        # map by word to get endpoint
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(
             self.path_start,
             self.path_end
         )
+        self.points = []
         self.removed_region = None
         self.curvature = None
         self.is_valid = False
+        self.color = color
         
     def cycle_word(self):
         self.word.cycle()
@@ -59,7 +65,6 @@ class Example:
         self.path_end = self.word.transformation(self.identified_start)
         self.universal_geodesic = FiniteGeodesic(self.path_start, self.path_end)
 
-        
     def generate_segments(self):
         universal_geodesic = copy.deepcopy(self.universal_geodesic)
         segments = []
@@ -70,7 +75,7 @@ class Example:
             self.fundamental_domain,
             partial_word
         )
-
+        segment.color = self.color 
         segments.append(segment)
         max_segment = segment
         
@@ -86,6 +91,7 @@ class Example:
                 self.fundamental_domain,
                 partial_word
             )
+            segment.color = self.color
 
             if segment.absolute_max.imag > max_segment.absolute_max.imag:
                 max_segment = segment
@@ -95,7 +101,7 @@ class Example:
         self.max_segment = max_segment
         self.segments = segments
 
-    def plot(self, fig_num=1):
+    def plot(self, fig_num=1, color="r"):
         fig = plt.figure(fig_num)
         fig.suptitle(f"curvature = {self.curvature}, word = B{self.word}")
         ax = fig.add_subplot(1, 3, 3)
@@ -117,6 +123,7 @@ class Example:
             plt.axis('off')
 
         hyperbolic_plane = HyperbolicPlane()
+        hyperbolic_plane.points = self.points
         hyperbolic_plane.tesselate(
             self.fundamental_domain,
             self.mobius_transformations.values()
@@ -162,9 +169,13 @@ class Example:
         self.zero_cells = zero_cells
 
     def set_sorted_lifts(self):
-        # sort 0 - cell lifts in order or increasing order on the universal geodesic
-        sorted_lifts = sorted(self.zero_cells, key=get_angle)
-        self.sorted_lifts = list(reversed(sorted_lifts))
+        # sort zero - cell lifts in increasing order on the universal geodesic
+        if self.universal_geodesic.orient == -1:
+            self.sorted_lifts = sorted(self.zero_cells, key=get_angle)
+        else:
+            self.sorted_lifts = list(
+                reversed(sorted(self.zero_cells, key=get_angle))
+            )
 
         # set lift index
         for lift_id, lift in enumerate(self.sorted_lifts):
@@ -238,7 +249,7 @@ class Example:
         for lift_tuple in half_edges.keys():
             half_edge = half_edges[lift_tuple]
             zero_cell = zero_cells[lift_tuple[1]]
-
+            
             # map half edge endpoint near opposite lif of start point
             orientation_point = zero_cell.switch_lift(lift_tuple[1], lift_tuple[0])
             center = universal_geodesic.get_center()
@@ -280,8 +291,8 @@ class Example:
     def set_regions(self):
         half_edges = self.half_edges.values()
         unique_half_edges = set([x.nxt.label for x in half_edges])
-        half_edge_lables = [x.label for x in half_edges]
-        half_edge_lables.sort()
+        half_edge_labels = [x.label for x in half_edges]
+        half_edge_labels.sort()
 
         if len(unique_half_edges) != len(half_edges):
             self.is_valid = False
@@ -292,7 +303,7 @@ class Example:
 
     def set_removed_region(self):
         universal_geodesic = self.universal_geodesic
-        zero_cells = self.zero_cells
+        orient = universal_geodesic.orient
         half_edges = self.half_edges
         max_segment = self.max_segment
         sorted_lifts = self.sorted_lifts
@@ -302,16 +313,13 @@ class Example:
         # points used to verify which half edge is contained in puncture region
         test_point = max_segment.lift(max_segment.absolute_max + 1j)
 
+        ordered_points = [self.universal_geodesic.bounds[0]] + sorted_lifts \
+            + [self.universal_geodesic.bounds[1]]
+            
         # find half edge closest to test point
-        for i in range(len(sorted_lifts)):
-            segment_start = sorted_lifts[i]
-
-            # get end bound if last segment
-            if i + 1 == len(sorted_lifts):
-                segment_end = universal_geodesic.bounds[1]
-
-            else:
-                segment_end = sorted_lifts[i + 1]
+        for i in range(len(ordered_points) - 1):
+            segment_start = ordered_points[i]
+            segment_end = ordered_points[i + 1]
             
             key = (segment_start, segment_end)
 
@@ -321,7 +329,8 @@ class Example:
             test_point_phase = get_angle(test_point - center.real)
 
             # checks if test_point lies within phase range of segment
-            if segment_start_phase >= test_point_phase and segment_end_phase <= test_point_phase:
+            if orient * segment_start_phase >= orient * test_point_phase \
+               >= orient * test_point_phase:
                 try:
                     half_edge = half_edges[key]
                     delta_x = test_point.real - center.real
@@ -384,6 +393,7 @@ class Example:
             self.generate_links()
 
         else:
+            print("No removed Region")
             self.is_valid = False
 
     def generate_dual_graph(self):
@@ -563,6 +573,7 @@ class Example:
 
 
 if __name__ == '__main__':
-    example = Example('BAbbAbabbABaa')
+    invalid_examples = ["BAABABaabAB"]
+    example = Example("BabbaBAABAbAA")
     example.run()
     

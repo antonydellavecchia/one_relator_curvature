@@ -3,7 +3,7 @@ from results import Base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-engine = create_engine("sqlite:////home/antony/one_relator_curvature/exampleso.db")
+engine = create_engine("sqlite:////home/antony/one_relator_curvature/examples.db")
 Session = sessionmaker(bind=engine)
 
 
