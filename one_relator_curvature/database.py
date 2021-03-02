@@ -1,28 +1,36 @@
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from results import Base
+from tables import Base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from pathlib import Path
 
 
-Session = sessionmaker(bind=engine)
-
-
-def create_engine_from_path(database_path: Path) -> Engine:
+def create_engine_from_path(database_path: Path, init=False) -> Engine:
     """Returns sqlalchemy engine at given path using sqlite"""
-    return create_engine(f"sqlite:///{database_path}")
+    engine = create_engine(f"sqlite:///{database_path}")
+
+    if init:
+        recreate_database(engine)
+
+    return engine
 
 
-
-def recreate_database(engine):
+def recreate_database(engine: Engine):
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 
 @contextmanager
-def session_scope():
+def session_scope(database_path: Path, init_db=False):
+    init = not database_path.exists() or init_db
+    engine = create_engine_from_path(
+        database_path,
+        init=init
+    )
+    Session = sessionmaker(bind=engine)
     session = Session()
+    
     try:
         yield session
         session.commit()

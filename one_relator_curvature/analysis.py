@@ -1,6 +1,3 @@
-
-
-
 from hyperbolic_plane import HyperbolicPlane
 from  punctured_surfaces import get_punctured_torus
 from word_utils import generate_random_word

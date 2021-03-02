@@ -1,16 +1,18 @@
-from typing import Union
+from typing import Union, List
 from analysis import Sample, get_cycle_word_analysis
 import argparse
 from example import Example
 from plotting import plot_results, plt
-from word_utils import generate_all_reduced_words, get_cycle_generator
+from word_utils import generate_all_reduced_words, get_cycle_generator, get_cycles
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 import json
 import subprocess
 from errors import PrecisionError
 from functools import partial
+from tables import Result, Cycle
 import constants
+from database import session_scope
 
 
 def main():
@@ -28,58 +30,21 @@ def main():
         "--sample-size", type=int, help="Size of sample to run on each word size"
     )
 
-    parser.add_argument("--word", type=str, help="The Word representing the relation")
+    #parser.add_argument("--word", type=str, help="The Word representing the relation")
 
     parser.add_argument("--cyclic", help="run analysis over the cycles of each word")
 
-    parser.add_argument(
-        "--output-dir", type=Path, help="where to store output polytopes"
-    )
+    parser.add_argument("--database-path", type=Path, help="Path to database file")
+
+    parser.add_argument("--init-db", type=bool, help="Boolean to init/reset db")
 
     args = parser.parse_args()
 
     run_examples(**vars(args))
 
 
-def run_cycle_examples(cycles, output_dir):
-    """runs examples for all cycles"""
-    cycle_analysis = {}
-
-    for word in cycles:
-        example = create_example(word, output_dir)
-
-        if example is not None:
-            # polytope_paths += [str(polytope_path)]
-            #
-            # polytope = example.get_polytope()
-            # output_path = output_dir / f"{word}.json"
-
-            # with open(output_path, "w") as output:
-            #     json.dump(polytope, output)
-
-            cycle_analysis[word] = example.get_result().curvature
-            # polymake_call = [
-        # "polymake",
-        # "--script",
-        # "/home/antony/projects/polymake_scripts/word_cycle_polytopes.pl",
-        # *polytope_paths,
-        # ]
-    #
-    # polymake_process = subprocess.run(polymake_call, capture_output=True)
-    # cycle_analysis = json.loads(polymake_process.stdout)
-    #
-
-    num_passing_cycles = len(
-        [x for x in cycle_analysis.values() if x < constants.EPSILON]
-    )
-
-    if num_passing_cycles > 0:
-        return 1
-    else:
-        return 0
-
-
-def create_example(word: str, output_dir: Path, precision=15) -> Union[None, Example]:
+def create_example(word: str, precision=15) -> Union[None, Example]:
+    """Creates and returns example if valid otheriwse returns None"""
     example = Example(word, precision)
 
     try:
@@ -87,43 +52,72 @@ def create_example(word: str, output_dir: Path, precision=15) -> Union[None, Exa
 
     except PrecisionError:
         if precision < 50:
-            return run_example(word, output_path, precision=precision + 10)
+            return create_example(word, precision=precision + 10)
 
     if example.is_valid and example.removed_region:
         return example
 
 
-def run_examples(word_size_range, cyclic, output_dir, word=None, sample_size=None):
-    results = {}
+def run_example(word) -> Union[Result, None]:
+    """Creates example and returns Result to be saved in database"""
+    example = create_example(word)
 
+    if example is not None:
+        return example.get_result()
+    else:
+        return None
+
+
+def run_examples(word_size_range, cyclic, database_path, sample_size=None, init_db=False):
     for word_size in word_size_range:
-        with Pool(cpu_count() - 1) as pool:
-            print(f"running examples for word size {word_size}")
-            words = ()
+        create_all_cycles(database_path, word_size)
+        
+        with session_scope(database_path, init_db=init_db) as session:
+            with Pool(cpu_count() - 2) as pool:
+                print(f"running examples for word size {word_size}")
+                words = ()
 
-            if sample_size is not None:
-                words = Sample(word_size, sample_size).words
+                if sample_size is not None:
+                    words = Sample(word_size, sample_size).words
 
-            else:
-                words = generate_all_reduced_words(word_size)
+                else:
+                    words = generate_all_reduced_words(word_size)
 
-            #base_path = output_dir / f"word_size_{word_size}"
-            #
-            #if not base_path.exists():
-                #base_path.mkdir(parents=True)
+                example_results = pool.map(run_example, words)
 
-            run_cycles_partial = partial(run_cycle_examples, output_dir=output_dir)
-            cycle_generator = get_cycle_generator(word_size)
-            cycle_results = pool.map(run_cycles_partial, cycle_generator)
-
-            print(
-                "Percentage of passing examples:",
-                sum(cycle_results) / len(cycle_results),
-            )
-
-            results[word_size] = sum(cycle_results) / len(cycle_results)
-        print(results)
+                for example_result in example_results:
+                    if example_result is not None:
+                        session.merge(example_result)
+                        session.commit()
 
 
+def create_all_cycles(database_path: Path, word_size: int) -> None:
+    """Initiates all cycles in the database"""
+    with session_scope(database_path) as session:
+        words = generate_all_reduced_words(word_size)
+
+        for word in words:
+            word_cycles = get_cycles(word)
+            cycle_representative = min(word_cycles)
+            session.merge(Cycle(
+                representative_word=cycle_representative
+            ))
+
+        session.commit()
+        
+def get_cycle_data(database_path: Path) -> None:
+    """get data for word sequence"""
+    
+    with session_scope(database_path) as session:
+        cycles = session.query(Cycle).all()
+        passing_examples = 0
+        
+        for cycle in cycles:
+            if cycle.min_curvature() < constants.EPSILON:
+                passing_examples += 1
+        
+
+        print(passing_examples / len(cycles))
+        
 if __name__ == "__main__":
     main()

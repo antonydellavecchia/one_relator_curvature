@@ -3,18 +3,19 @@ name: one-relator-curvature
 channels:
   - conda-forge
   - defaults
+  - ibmdecisionoptimization
 
 dependencies:
   - python=3.7
   - mpmath
   - gmpy2
   - pip
-
+  - cplex
+  
   - pip:
     - sqlalchemy
     - pulp
     - matplotlib
-    - networkx
     - scipy
     - pandas
     - networkx

@@ -1,5 +1,5 @@
 from database import session_scope
-from results import Result
+from tables import Result
 from word import Word
 import matplotlib.pyplot as plt
 import pandas as pd
