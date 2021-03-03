@@ -22,8 +22,8 @@ def recreate_database(engine: Engine):
 
 
 @contextmanager
-def session_scope(database_path: Path, init_db=False):
-    init = not database_path.exists() or init_db
+def session_scope(database_path: Path, reset_db=False):
+    init = not database_path.exists() or reset_db
     engine = create_engine_from_path(
         database_path,
         init=init

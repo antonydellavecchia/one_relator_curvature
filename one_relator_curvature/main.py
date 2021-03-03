@@ -30,13 +30,13 @@ def main():
         "--sample-size", type=int, help="Size of sample to run on each word size"
     )
 
-    #parser.add_argument("--word", type=str, help="The Word representing the relation")
+    # parser.add_argument("--word", type=str, help="The Word representing the relation")
 
     parser.add_argument("--cyclic", help="run analysis over the cycles of each word")
 
-    parser.add_argument("--database-path", type=Path, help="Path to database file")
-
-    parser.add_argument("--init-db", type=bool, help="Boolean to init/reset db")
+    parser.add_argument(
+        "--database-dir", type=Path, help="Path to store database files"
+    )
 
     args = parser.parse_args()
 
@@ -68,11 +68,20 @@ def run_example(word) -> Union[Result, None]:
         return None
 
 
-def run_examples(word_size_range, cyclic, database_path, sample_size=None, init_db=False):
+def run_examples(
+    word_size_range: List[int],
+    cyclic: bool,
+    database_dir: Path,
+    sample_size: int = None
+) -> None:
     for word_size in word_size_range:
+        if not database_dir.exists():
+            database_dir.mkdir()
+            
+        database_path = database_dir / f"rank_2_length_{word_size}.db"
         create_all_cycles(database_path, word_size)
-        
-        with session_scope(database_path, init_db=init_db) as session:
+
+        with session_scope(database_path) as session:
             with Pool(cpu_count() - 2) as pool:
                 print(f"running examples for word size {word_size}")
                 words = ()
@@ -99,25 +108,24 @@ def create_all_cycles(database_path: Path, word_size: int) -> None:
         for word in words:
             word_cycles = get_cycles(word)
             cycle_representative = min(word_cycles)
-            session.merge(Cycle(
-                representative_word=cycle_representative
-            ))
+            session.merge(Cycle(representative_word=cycle_representative))
 
         session.commit()
-        
+
+
 def get_cycle_data(database_path: Path) -> None:
     """get data for word sequence"""
-    
+
     with session_scope(database_path) as session:
         cycles = session.query(Cycle).all()
         passing_examples = 0
-        
+
         for cycle in cycles:
             if cycle.min_curvature() < constants.EPSILON:
                 passing_examples += 1
-        
 
         print(passing_examples / len(cycles))
-        
+
+
 if __name__ == "__main__":
     main()

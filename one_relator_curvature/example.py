@@ -43,7 +43,8 @@ class Example:
         self.curvature = None
         self.is_valid = False
         self.color = color
-
+        self.dual_graph = None
+        
     def cycle_word(self):
         self.word.cycle()
         print(f"finding path end with {str(self.word)}")
@@ -82,7 +83,7 @@ class Example:
         fig.suptitle(f"curvature = {self.curvature}, word = B{self.word}")
         ax = fig.add_subplot(1, 3, 3)
 
-        if self.is_valid:
+        if self.is_valid and self.dual_graph is not None:
             removed_region_label = self.removed_region.label
             pos = nx.spring_layout(self.dual_graph, k=0.9)
             color_map = [
@@ -214,9 +215,8 @@ class Example:
                     universal_geodesic.bounds[1],
                     last_lift,
                 ) in half_edges.keys():
-                    print("half_edge tuple already exists")
                     self.is_valid = False
-                    raise PrecisionError()
+                    raise PrecisionError(f"half_edge tuple already exists B{self.word}")
 
                 half_edges[(universal_geodesic.bounds[0], first_lift)] = half_edge1
                 half_edges[(universal_geodesic.bounds[1], last_lift)] = half_edge2
@@ -358,26 +358,14 @@ class Example:
         self.links = links
 
     def generate_cell_complex(self):
-        print("generating segments")
         self.generate_segments()
-
-        print("genera zero cells")
         self.generate_zero_cells()
-
-        print("set sorted lifts")
         self.set_sorted_lifts()
-
-        print("generate half edges")
         self.generate_half_edges()
-
-        print("set_regions")
         self.set_regions()
-
-        print("set removed regions")
         self.set_removed_region()
 
         if self.removed_region is not None:
-            print("generate links")
             self.is_valid = True
             self.generate_links()
 
@@ -448,8 +436,8 @@ class Example:
         for region in self.regions:
             num_of_edges += len(region.get_equation()) / 2
 
+            # skips adding removed face to linear model
             if region.get_equation()[0] in self.removed_region.get_equation():
-                print(region.get_equation(), "removed")
                 continue
 
             region_equations.append(
@@ -469,7 +457,7 @@ class Example:
         for equation in region_equations:
             prob += equation[0] <= equation[1]
 
-        prob.writeLP("example_system.lp")
+        #prob.writeLP("example_system.lp")
         
         solver = pl.CPLEX_PY(msg=0)
         prob.solve(
@@ -499,16 +487,11 @@ class Example:
 
     def run(self):
         try:
-            print(f"***** running example B{self.word.word} *****")
-            print("** generating cell complex **")
             self.generate_cell_complex()
 
         except PrecisionError:
             self.is_valid = False
-            print("PrecisionError")
             return
-
-        print("Example is valid:", self.is_valid)
 
         if not self.is_valid:
             return
@@ -521,13 +504,14 @@ class Example:
             self.is_valid = False
             return
 
-        self.find_angle_assignments()
-
-        print("Example curvature:", self.curvature)
-
+        try:
+            self.find_angle_assignments()
+            
+        except Exception as e:
+            print(f"Error solving system on B{self.word}")
+            
         self.is_valid = True
 
-        # print("*** generating dual graph")
         # self.generate_dual_graph()
 
     def get_polytope(self):
@@ -587,6 +571,7 @@ class Example:
 
 
 if __name__ == "__main__":
-    invalid_examples = ["BAABABaabAB"]
-    example = Example("BabbaBAABAbAA")
+    example = Example("BBABAAbbaa")
     example.run()
+    example.plot()
+    plt.show()

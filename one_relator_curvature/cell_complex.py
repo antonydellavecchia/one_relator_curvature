@@ -119,7 +119,9 @@ class Link:
         return num_vertices - num_edges
             
     def full_link(self, label, removed_region):
-        # keys are vertices values are list of edges at vertex
+        """
+        keys are vertices values are list of edges at vertex
+        """
         zero_cell = self.zero_cell
         vertices = list(self.link_map.keys())
         initial_half_edge = zero_cell.half_edges[0]
