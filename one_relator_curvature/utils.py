@@ -1,22 +1,16 @@
 import numpy as np
 from itertools import permutations
 import copy
-from typing import Generator
 from mpmath import mpf, atan, degrees, pi
 from constants import EPSILON
-from tables import Result
+from tables import Cycle
 
-
-def is_passing(results: Generator[Result, None, None]) -> int:
-    try:
-        min_over_results = min(results, key=lambda x: x.curvature)
-    except ValueError:
-        min_over_results = float("inf")
-
-    if min_over_results < EPSILON:
+def is_passing(cycle: Cycle):
+    if cycle.min_curvature() < EPSILON:
         return 1
     else:
         return 0
+
 
 
 def equivalence_class(word, generators=["a", "b"]):

@@ -37,7 +37,7 @@ def get_polytopes(parser: ArgumentParser) -> None:
     )
 
 
-def get_cycle_data(parser: ArgumentParser) -> None:
+def get_all_cycle_data(parser: ArgumentParser) -> None:
     """Adds arguments for reading database files"""
     parser.add_argument(
         "--input-dir", type=Path, help="Directory containing database files"

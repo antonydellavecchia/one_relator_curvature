@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Tuple
 from example import Example
 from tables import Result, Cycle
 from errors import PrecisionError
@@ -7,7 +7,6 @@ from multiprocessing import Pool, cpu_count
 from database import session_scope
 from utils import is_passing
 from word_utils import generate_all_reduced_words, get_cycles
-from constants import EPSILON
 import json
 
 
@@ -104,25 +103,25 @@ def create_all_cycles(database_path: Path, word_size: int, **kwargs) -> None:
 
         session.commit()
 
+def get_cycle_data(database_path: Path, **kwargs) -> Tuple[int, float]:
+    """Returns tuple of size  and min curvature"""
+    word_size = int(database_path.stem.split("_")[-1])
 
-def get_cycle_data(input_dir: Path, output_dir: Path, **kwargs) -> None:
+    with session_scope(database_path) as session:
+        cycles = session.query(Cycle).all()
+        passing_examples = sum(map(is_passing, cycles))
+        percentage_of_passes = passing_examples / len(cycles)
+
+    return word_size, percentage_of_passes
+
+
+def get_all_cycle_data(input_dir: Path, output_dir: Path, **kwargs) -> None:
     """get data for word sequence"""
     result_tuples = []
 
-    for database_path in input_dir.glob("*.db"):
-        word_size = int(database_path.stem.split("_")[-1])
-
-        with Pool(cpu_count() - 1) as pool:
-            with session_scope(database_path) as session:
-                cycles = session.query(Cycle).all()
-                result_generators = (
-                    (result for result in cycle.class_results) for cycle in cycles
-                )
-                passing_examples = sum(pool.map(is_passing, result_generators))
-
-            percentage_of_passes = passing_examples / len(cycles)
-
-        result_tuples.append((word_size, percentage_of_passes))
+    with Pool(cpu_count() - 1) as pool:
+        databse_paths = input_dir.glob("*.db")
+        result_tuples = pool.map(get_cycle_data, databse_paths)
 
     if output_dir is None:
         print(json.dumps(result_tuples, indent=4))
