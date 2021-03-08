@@ -7,16 +7,12 @@ from punctured_surfaces import get_punctured_torus
 from cell_complex import CellComplex, ZeroCell, HalfEdge, Link
 from tables import Result
 from word import Word
-from errors import PrecisionError, CyclingError
-
-from decimal import *
+from errors import PrecisionError
 import copy
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import networkx as nx
 import re
-from mpmath import mp, mpf, atan
 
 
 class Example:
