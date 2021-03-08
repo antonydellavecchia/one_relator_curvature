@@ -457,8 +457,6 @@ class Example:
         for equation in region_equations:
             prob += equation[0] <= equation[1]
 
-        #prob.writeLP("example_system.lp")
-        
         solver = pl.CPLEX_PY(msg=0)
         prob.solve(
             solver

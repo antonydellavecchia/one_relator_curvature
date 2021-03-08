@@ -6,17 +6,15 @@ channels:
   - ibmdecisionoptimization
 
 dependencies:
-  - python=3.7
   - mpmath
   - gmpy2
-  - pip
   - cplex
+  - pip
   
   - pip:
     - sqlalchemy
     - pulp
     - matplotlib
-    - scipy
     - pandas
     - networkx
 
