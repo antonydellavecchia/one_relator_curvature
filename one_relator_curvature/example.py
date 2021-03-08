@@ -40,7 +40,7 @@ class Example:
         self.is_valid = False
         self.color = color
         self.dual_graph = None
-        
+
     def cycle_word(self):
         self.word.cycle()
         print(f"finding path end with {str(self.word)}")
@@ -363,7 +363,6 @@ class Example:
 
         if self.removed_region is not None:
             self.is_valid = True
-            self.generate_links()
 
         else:
             print("No removed Region")
@@ -454,9 +453,7 @@ class Example:
             prob += equation[0] <= equation[1]
 
         solver = pl.CPLEX_PY(msg=0)
-        prob.solve(
-            solver
-        )
+        prob.solve(solver)
 
         self.curvature = pl.value(prob.objective) - (len(self.attaching_disc) - 2)
 
@@ -479,7 +476,7 @@ class Example:
         except TypeError:
             return None
 
-    def run(self):
+    def generate_inequalities(self):
         try:
             self.generate_cell_complex()
 
@@ -490,23 +487,24 @@ class Example:
         if not self.is_valid:
             return
 
-        if not self.check_euler():
-            self.is_valid = False
-            return
-
         if self.removed_region is None:
             self.is_valid = False
             return
 
+        self.generate_links()
+
+        if not self.check_euler():
+            self.is_valid = False
+
+    def solve(self):
+        """Solve the system"""
         try:
             self.find_angle_assignments()
-            
+
         except Exception as e:
             print(f"Error solving system on B{self.word}")
-            
-        self.is_valid = True
 
-        # self.generate_dual_graph()
+        self.is_valid = True
 
     def get_polytope(self):
         """

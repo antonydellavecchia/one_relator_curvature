@@ -106,9 +106,8 @@ def get_cycle_generator(
         except StopIteration:
             yield get_cycles(word)
 
-
-def generate_all_reduced_words(size, surface_word="BAba", repeat_size=6):
     
+def generate_all_reduced_words(size, surface_word="BAba", repeat_size=6):
     num_of_sub_products = size // repeat_size
     leftover_product_size = size % repeat_size
     possible_sub_words = word_generator(surface_word, size=repeat_size)

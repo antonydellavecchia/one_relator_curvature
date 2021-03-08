@@ -1,3 +1,4 @@
+import json
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
@@ -16,6 +17,12 @@ class Result(Base):
     def __repr__(self):
         return f"<Result(word='{self.word}')>"
 
+    def __str__(self):
+        result_dict = self.__dict__
+        del result_dict["_sa_instance_state"]
+
+        return json.dumps(result_dict, indent=4)
+
 
 class Cycle(Base):
     __tablename__ = "cycles"
@@ -27,8 +34,15 @@ class Cycle(Base):
 
     def min_curvature(self) -> float:
         try:
-            return min(
-                (result.curvature for result in self.class_results)
+            min_over_cycles = min(
+                (
+                    result.curvature
+                    for result in self.class_results
+                    if result.curvature is not None
+                )
             )
+
+            return min_over_cycles
+
         except ValueError:
             return float("inf")

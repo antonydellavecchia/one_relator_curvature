@@ -23,7 +23,6 @@ def solve_examples(parser: ArgumentParser) -> None:
     )
 
 
-
 def get_polytope(parser: ArgumentParser) -> None:
     """Adds arguments to parser for outputting polytope of single example"""
     parser.add_argument("--word", type=str, help="Word representing the one relator")
@@ -35,4 +34,11 @@ def get_polytopes(parser: ArgumentParser) -> None:
     """
     parser.add_argument(
         "--words", type=str, nargs="+", help="List of words to get polytopes for"
+    )
+
+
+def get_cycle_data(parser: ArgumentParser) -> None:
+    """Adds arguments for reading database files"""
+    parser.add_argument(
+        "--input-dir", type=Path, help="Directory containing database files"
     )
