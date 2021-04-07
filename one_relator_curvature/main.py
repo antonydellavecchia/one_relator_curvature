@@ -2,9 +2,10 @@ from typing import Union, List
 from argparse import ArgumentParser
 from pathlib import Path
 from inspect import getmembers, isfunction
-import parsers
-import cli_functions
-import constants
+
+from . import parsers
+from . import cli_functions
+
 
 
 def add_subparsers(parser: ArgumentParser, parent_parser: ArgumentParser) -> None:

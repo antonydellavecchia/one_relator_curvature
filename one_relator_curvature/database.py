@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from tables import Base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from pathlib import Path
+
+from .tables import Base
 
 
 def create_engine_from_path(database_path: Path, init=False) -> Engine:

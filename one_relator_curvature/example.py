@@ -1,13 +1,14 @@
+from .hyperbolic_plane import FiniteGeodesic, Segment, HyperbolicPlane
+from .circle_intersection import Geometry
+from .utils import mobius, get_angle
+from .word_utils import word_inverse, get_cycles
+from .punctured_surfaces import get_punctured_torus
+from .cell_complex import CellComplex, ZeroCell, HalfEdge, Link
+from .tables import Result
+from .word import Word
+from .errors import PrecisionError
+
 import pulp as pl
-from hyperbolic_plane import FiniteGeodesic, Segment, HyperbolicPlane
-from circle_intersection import Geometry
-from utils import mobius, get_angle
-from word_utils import word_inverse, get_cycles
-from punctured_surfaces import get_punctured_torus
-from cell_complex import CellComplex, ZeroCell, HalfEdge, Link
-from tables import Result
-from word import Word
-from errors import PrecisionError
 import copy
 import matplotlib.pyplot as plt
 import numpy as np

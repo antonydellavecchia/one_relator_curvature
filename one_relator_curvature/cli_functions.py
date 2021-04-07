@@ -1,13 +1,16 @@
 from pathlib import Path
 from typing import Union, List, Optional, Tuple
-from example import Example
-from tables import Result, Cycle
-from errors import PrecisionError
 from multiprocessing import Pool, cpu_count
-from database import session_scope
-from utils import is_passing
-from word_utils import generate_all_reduced_words, get_cycles
 import json
+
+from .example import Example
+from .tables import Result, Cycle
+from .errors import PrecisionError
+
+from .database import session_scope
+from .utils import is_passing
+from .word_utils import generate_all_reduced_words, get_cycles
+
 
 
 def create_example(word: str, precision=15) -> Union[None, Example]:

@@ -1,7 +1,9 @@
 from collections import Counter
-from utils import mobius
-from word_utils import word_inverse, cycle_word, convert_to_runnable
 import numpy as np
+
+from .utils import mobius
+from .word_utils import word_inverse, cycle_word, convert_to_runnable
+
 
 
 class Word:

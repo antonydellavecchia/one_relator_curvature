@@ -1,5 +1,4 @@
-import numpy as np
-from utils import get_angle
+from .utils import get_angle
 
 
 class ZeroCell:
@@ -22,7 +21,7 @@ class ZeroCell:
         # cover starting from point in fundamental domain
         if get_angle(lift1) > get_angle(lift2):
             self.lifts = (lift1, lift2)
-            self.segments = (segment1, segment2) 
+            self.segments = (segment1, segment2)
 
         else:
             self.lifts = (lift2, lift1)
@@ -36,7 +35,7 @@ class ZeroCell:
         to get an orientation near the end of half edge
         """
         mapped_point = point
-        
+
         if lift == self.lifts[0]:
             mapped_point = self.segments[0].inverse_lift(mapped_point)
             mapped_point = self.segments[1].lift(mapped_point)
@@ -44,14 +43,14 @@ class ZeroCell:
         elif lift == self.lifts[1]:
             mapped_point = self.segments[1].inverse_lift(mapped_point)
             mapped_point = self.segments[0].lift(mapped_point)
-            
+
         else:
-            print('error recognizing lift')
+            print("error recognizing lift")
 
         return mapped_point
 
     def set_index(self, lift, index):
-        """   
+        """
         the index is the ordering of lifts along universal geodesic
         """
         if lift == self.lifts[0]:
@@ -61,7 +60,7 @@ class ZeroCell:
             self.index = (self.index[0], index)
 
         else:
-            print('error setting index')
+            print("error setting index")
 
     def get_conjugate_index(self, lift):
         if lift == self.lifts[0]:
@@ -71,7 +70,8 @@ class ZeroCell:
             return self.index[0]
 
         else:
-            print('error getting lift index')
+            print("error getting lift index")
+
 
 class HalfEdge:
     def __init__(self, label):
@@ -79,7 +79,6 @@ class HalfEdge:
         self.nxt = None
         self.flip = None
         self.region = None
-        
 
     def set_next(self, half_edge):
         self.nxt = half_edge
@@ -93,17 +92,12 @@ class HalfEdge:
 
 class Link:
     def __init__(self, zero_cell=None):
-        """ 
+        """
         links are the graphs at zero-cells:
         we assume no triple intersections
         """
         self.zero_cell = zero_cell
-        self.link_map = {
-            (-1, 0): [],
-            (0, 1): [],
-            (1, 0): [],
-            (0, -1): []
-        }
+        self.link_map = {(-1, 0): [], (0, 1): [], (1, 0): [], (0, -1): []}
 
     def euler(self):
         num_vertices = 0
@@ -117,7 +111,7 @@ class Link:
         num_edges = num_edges / 2
 
         return num_vertices - num_edges
-            
+
     def full_link(self, label, removed_region):
         """
         keys are vertices values are list of edges at vertex
@@ -131,15 +125,15 @@ class Link:
         remove_labels = removed_region.get_labels()
 
         # create edges in attaching disc
-        edge = ((-1, 0), (1, 0), '{}disc1'.format(label))
+        edge = ((-1, 0), (1, 0), "{}disc1".format(label))
         self.link_map[(-1, 0)].append(edge)
         self.link_map[(1, 0)].append(edge)
 
-        edge = ((0, -1), (0, 1), '{}disc2'.format(label))
+        edge = ((0, -1), (0, 1), "{}disc2".format(label))
         self.link_map[(0, -1)].append(edge)
         self.link_map[(0, 1)].append(edge)
 
-        while (initial_half_edge.label != current_half_edge.label):
+        while initial_half_edge.label != current_half_edge.label:
             vertex1 = vertices[count]
             vertex2 = vertices[(count + 1) % 4]
 
@@ -155,30 +149,28 @@ class Link:
         # get last edge
         vertex1 = vertices[count % 4]
         vertex2 = vertices[(count + 1) % 4]
-        
+
         if current_half_edge.label not in remove_labels:
             edge = (vertex1, vertex2, current_half_edge.label)
-        
+
         self.link_map[vertex1].append(edge)
         self.link_map[vertex2].append(edge)
 
-    # returns tuple of sorted labels 
+    # returns tuple of sorted labels
     def get_labels(self):
         labels = []
 
         for edges in self.link_map.values():
-            labels.extend([
-                str(x[2]) for x in edges if str(x[2]) not in labels
-            ])
+            labels.extend([str(x[2]) for x in edges if str(x[2]) not in labels])
 
         for index in range(6 - len(labels)):
             labels.append("none")
 
         return tuple(labels)
-    
+
     def set_edges(self, vertex, edges):
         self.link_map[vertex] = edges
-            
+
     def remove_edge(self, edge):
         sub_link = Link()
 
@@ -235,19 +227,21 @@ class Link:
 
                     if regular_section.is_empty():
                         pass
-                
+
                     else:
                         sub_equations = regular_section.get_equations()
-                        equations.extend([
-                            equation for equation in sub_equations
-                            if equation not in equations
-                        ])
+                        equations.extend(
+                            [
+                                equation
+                                for equation in sub_equations
+                                if equation not in equations
+                            ]
+                        )
 
         if not self.is_empty():
-            equations.append({
-                'labels': self.get_labels(),
-                'constant': 2 - self.euler()
-            })
+            equations.append(
+                {"labels": self.get_labels(), "constant": 2 - self.euler()}
+            )
 
         return equations
 
@@ -263,7 +257,7 @@ class Region:
 
     def __len__(self):
         return len(self.half_edges)
-    
+
     def print_region(self):
         for half_edge in self.half_edges:
             print(half_edge.label, "***")
@@ -278,7 +272,7 @@ class Region:
     def get_vertices(self):
         return [x.zero_cell_label for x in self.half_edges]
 
-    
+
 class CellComplex:
     def __init__(self, half_edges):
         self.half_edges = half_edges
@@ -292,9 +286,9 @@ class CellComplex:
                 half_edge.belongs_to(region)
                 initial_label = half_edge.label
                 next_half_edge = half_edge.nxt
-                
-                while(next_half_edge.label != initial_label):
-                    #print(next_half_edge.label, initial_label)
+
+                while next_half_edge.label != initial_label:
+                    # print(next_half_edge.label, initial_label)
                     region.add_half_edge(next_half_edge)
                     next_half_edge.belongs_to(region)
                     next_half_edge = next_half_edge.nxt
