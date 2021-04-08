@@ -65,7 +65,7 @@ def solve_examples(
         # should create a temp directory
         raise NotImplementedError("temp directory")
 
-    for word_size in word_size_range:
+    for word_size in range(*word_size_range):
         if not database_dir.exists():
             database_dir.mkdir(parents=True)
 
@@ -91,7 +91,8 @@ def solve_examples(
                         session.merge(example_result)
                         session.commit()
 
-    get_cycle_data(input_dir=database_dir, output_dir=output_dir, **kwargs)
+    if output_dir is not None:
+        get_all_cycle_data(input_dir=database_dir, output_dir=output_dir, **kwargs)
 
 
 def create_all_cycles(database_path: Path, word_size: int, **kwargs) -> None:

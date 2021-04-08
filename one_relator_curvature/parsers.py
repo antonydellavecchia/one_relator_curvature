@@ -12,7 +12,7 @@ def solve_examples(parser: ArgumentParser) -> None:
     parser.add_argument(
         "--word-size-range",
         type=int,
-        nargs="+",
+        nargs=2,
         help="range of word sizes to run examples on",
     )
 
