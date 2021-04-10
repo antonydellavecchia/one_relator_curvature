@@ -43,7 +43,7 @@ def main():
     add_subparsers(parser, parent_parser)
 
     args = parser.parse_args()
-    
+
     run_cli_function(**args.__dict__)
 
 

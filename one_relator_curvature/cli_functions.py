@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Union, List, Optional, Tuple
-from functools import partial
+from functools import partial, reduce
 from multiprocessing import Pool, cpu_count
 import json
 
@@ -13,36 +13,46 @@ from .utils import is_passing
 from .word_utils import generate_all_reduced_words, get_cycles
 
 
-def get_polytope(word: str, output_dir: Path, cycles: bool = False, **kwargs) -> None:
+def get_polytope(
+    word: str, output_dir: Path, cycles: bool = False
+) -> None:
     """Writes polytope for given word to file in the output drectory"""
     if cycles:
         words = get_cycles(word)
         cycles_output_dir = output_dir / f"{word}_cycles"
-        get_polytopes(words, cycles_output_dir, **kwargs)
 
-    example = create_example(word)
-    polytope = example.get_polytope()
-    output_path = output_dir / f"{word}_polytope.json"
+        for cycle_word in words:
+            get_polytope(cycle_word, cycles_output_dir)
 
-    with open(output_path, "w") as output_file:
-        output_file.write(json.dumps(polytope))
+    else:
+        example = create_example(word)
+
+        if example is None:
+            print(f"Couldn't generate example for word {word}")
+            return
+
+        polytope = example.get_polytope()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"{word}_polytope.json"
+
+        with open(output_path, "w") as output_file:
+            print(f"Writing polytope for word {word} to {output_path}")
+            output_file.write(json.dumps(polytope))
 
 
 def get_polytopes(
-    words: List[str], output_dir: Path, cycles: bool = False, parallelize: bool = True
+    words: List[str], output_dir: Path, cycles: bool = False
 ) -> None:
     """Writes a polytope to file for each word"""
+    get_polytope_partial = partial(
+        get_polytope, output_dir=output_dir, cycles=cycles
+    )
 
-    if parallelize:
-        get_polytope_partial = partial(get_polytope, cycles=cycles, output_dir=output_dir, parallelize=False)
-
-        with Pool(cpu_count() - 1) as pool:
-            pool.apply(get_polytope_partial, words)
-
-    else:
-        for word in words:
-            get_polytope(word, output_dir)
         
+    with Pool(cpu_count() - 1) as pool:
+        pool.map(get_polytope_partial, words)
+
+
 def create_example(word: str, precision=15) -> Union[None, Example]:
     """Creates and returns example if valid otheriwse returns None"""
     example = Example(word, precision)
@@ -111,7 +121,7 @@ def solve_examples(
                     words = Sample(word_size, sample_size).words
 
                 else:
-                    print("Generating ll words")
+                    print("Generating all reduced words")
                     words = generate_all_reduced_words(word_size)
 
                 print(f"running examples for word size {word_size}")
