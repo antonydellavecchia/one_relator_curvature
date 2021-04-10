@@ -515,7 +515,9 @@ class Example:
         num_region_angles = len(self.cell_complex.half_edges)
         num_disc_angles = 2 * len(self.links)
         inequality_size = num_region_angles + num_disc_angles + 1
-        inequalities = []
+        regions_inequalities = []
+        links_inequalities = []
+        
         disc_inequality = np.concatenate(
             (
                 [num_disc_angles - 2],
@@ -523,6 +525,8 @@ class Example:
                 -np.ones(num_disc_angles),
             )
         )
+
+        regions_inequalities.append(disc_inequality)
 
         for region in self.regions:
             if region == self.removed_region:
@@ -534,7 +538,7 @@ class Example:
                 inequality[index + 1] = -1
 
             inequality[0] = len(region_angles) - 2
-            inequalities.append(inequality)
+            regions_inequalities.append(inequality)
 
         for link in self.links:
             for equation in link.get_equations():
@@ -555,11 +559,11 @@ class Example:
                         else:
                             inequality[1 + int(label)] = 1
 
-                inequalities.append(inequality)
+                links_inequalities.append(inequality)
 
         return {
-            "constraints": np.array(inequalities).tolist(),
-            "disc": disc_inequality.tolist(),
+            "links_inequalities": np.array(links_inequalities).tolist(),
+            "regions_inequalities": np.array(regions_inequalities).tolist(),
         }
 
 

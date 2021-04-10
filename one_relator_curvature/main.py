@@ -38,6 +38,8 @@ def main():
         "--output-dir", type=Path, help="Path to store output files"
     )
 
+    parent_parser.add_argument('--cycles', dest='cycles', action='store_true')
+    
     add_subparsers(parser, parent_parser)
 
     args = parser.parse_args()

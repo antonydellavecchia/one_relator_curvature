@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Union, List, Optional, Tuple
+from functools import partial
 from multiprocessing import Pool, cpu_count
 import json
 
@@ -12,13 +13,36 @@ from .utils import is_passing
 from .word_utils import generate_all_reduced_words, get_cycles
 
 
-def get_polytope(word: str, output_dir: Path) -> None:
+def get_polytope(word: str, output_dir: Path, cycles: bool = False, **kwargs) -> None:
+    """Writes polytope for given word to file in the output drectory"""
+    if cycles:
+        words = get_cycles(word)
+        cycles_output_dir = output_dir / f"{word}_cycles"
+        get_polytopes(words, cycles_output_dir, **kwargs)
+
     example = create_example(word)
     polytope = example.get_polytope()
+    output_path = output_dir / f"{word}_polytope.json"
 
-    print(polytope)
-    
+    with open(output_path, "w") as output_file:
+        output_file.write(json.dumps(polytope))
 
+
+def get_polytopes(
+    words: List[str], output_dir: Path, cycles: bool = False, parallelize: bool = True
+) -> None:
+    """Writes a polytope to file for each word"""
+
+    if parallelize:
+        get_polytope_partial = partial(get_polytope, cycles=cycles, output_dir=output_dir, parallelize=False)
+
+        with Pool(cpu_count() - 1) as pool:
+            pool.apply(get_polytope_partial, words)
+
+    else:
+        for word in words:
+            get_polytope(word, output_dir)
+        
 def create_example(word: str, precision=15) -> Union[None, Example]:
     """Creates and returns example if valid otheriwse returns None"""
     example = Example(word, precision)
@@ -80,7 +104,6 @@ def solve_examples(
 
         with session_scope(database_path) as session:
             with Pool(cpu_count() - 1) as pool:
-                print(f"running examples for word size {word_size}")
                 words = ()
 
                 if sample_size is not None:
@@ -88,8 +111,10 @@ def solve_examples(
                     words = Sample(word_size, sample_size).words
 
                 else:
+                    print("Generating ll words")
                     words = generate_all_reduced_words(word_size)
 
+                print(f"running examples for word size {word_size}")
                 example_results = pool.map(solve_example, words)
 
                 for example_result in example_results:
@@ -112,6 +137,7 @@ def create_all_cycles(database_path: Path, word_size: int, **kwargs) -> None:
             session.merge(Cycle(representative_word=cycle_representative))
 
         session.commit()
+
 
 def get_cycle_data(database_path: Path, **kwargs) -> Tuple[int, float]:
     """Returns tuple of size  and min curvature"""
