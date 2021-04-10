@@ -12,6 +12,12 @@ from .utils import is_passing
 from .word_utils import generate_all_reduced_words, get_cycles
 
 
+def get_polytope(word: str, output_dir: Path) -> None:
+    example = create_example(word)
+    polytope = example.get_polytope()
+
+    print(polytope)
+    
 
 def create_example(word: str, precision=15) -> Union[None, Example]:
     """Creates and returns example if valid otheriwse returns None"""
