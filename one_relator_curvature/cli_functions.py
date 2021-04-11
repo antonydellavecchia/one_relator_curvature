@@ -10,7 +10,7 @@ from .errors import PrecisionError
 
 from .database import session_scope
 from .utils import is_passing
-from .word_utils import generate_all_reduced_words, get_cycles
+from .word_utils import generate_all_reduced_words, get_cycles, convert_to_runnable
 
 
 def get_polytope(
@@ -55,14 +55,15 @@ def get_polytopes(
 
 def create_example(word: str, precision=15) -> Union[None, Example]:
     """Creates and returns example if valid otheriwse returns None"""
-    example = Example(word, precision)
+    runnable_word = convert_to_runnable(word)
+    example = Example(runnable_word, precision)
 
     try:
         example.generate_inequalities()
 
     except PrecisionError:
         if precision < 50:
-            return create_example(word, precision=precision + 10)
+            return create_example(runnable_word, precision=precision + 10)
 
     if example.is_valid and example.removed_region:
         return example
