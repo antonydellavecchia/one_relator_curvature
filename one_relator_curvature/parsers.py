@@ -4,7 +4,7 @@ from pathlib import Path
 
 def solve_example(parser: ArgumentParser) -> None:
     """Adds arguments to parser for solving a single example"""
-    parser.add_argument("--word", type=str, help="Word representing the one relator")
+    parser.add_argument("--word", type=str, help="Word representing the one relator", required=True)
 
 
 def solve_examples(parser: ArgumentParser) -> None:
@@ -14,6 +14,7 @@ def solve_examples(parser: ArgumentParser) -> None:
         type=int,
         nargs=2,
         help="range of word sizes to run examples on",
+        required=True
     )
 
     parser.add_argument(
@@ -25,15 +26,15 @@ def solve_examples(parser: ArgumentParser) -> None:
 
 def get_polytope(parser: ArgumentParser) -> None:
     """Adds arguments to parser for outputting polytope of single example"""
-    parser.add_argument("--word", type=str, help="Word representing the one relator")
-
+    parser.add_argument("--word", type=str, help="Word representing the one relator", required=True)
+    
 
 def get_polytopes(parser: ArgumentParser) -> None:
     """
     Adds arguments to parse for outputting poltyopes for multiple examples
     """
     parser.add_argument(
-        "--words", type=str, nargs="+", help="List of words to get polytopes for"
+        "--words", type=str, nargs="+", help="List of words to get polytopes for", required=True
     )
 
 
