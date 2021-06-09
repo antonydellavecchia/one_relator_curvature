@@ -2,7 +2,8 @@
 
 ## About
 This project provides an api for studying regular sectional curvature of one-relator groups.
-
+You can find slides used to present the work describing what the software has been built for 
+in the files of this repository.
 
 
 ## Installation
