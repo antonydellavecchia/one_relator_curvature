@@ -1,12 +1,17 @@
-from .hyperbolic_plane import FiniteGeodesic, Segment, HyperbolicPlane
-from .circle_intersection import Geometry
-from .utils import mobius, get_angle
-from .word_utils import word_inverse, get_cycles
-from .punctured_surfaces import get_punctured_torus
-from .cell_complex import CellComplex, ZeroCell, HalfEdge, Link
-from .tables import Result
-from .word import Word
-from .errors import PrecisionError
+
+from one_relator_curvature.hyperbolic_plane import (
+    FiniteGeodesic,
+    Segment,
+    HyperbolicPlane,
+)
+from one_relator_curvature.circle_intersection import Geometry
+from one_relator_curvature.utils import mobius, get_angle
+from one_relator_curvature.word_utils import word_inverse, get_cycles
+from one_relator_curvature.punctured_surfaces import get_punctured_torus
+from one_relator_curvature.cell_complex import CellComplex, ZeroCell, HalfEdge, Link
+from one_relator_curvature.tables import Result
+from one_relator_curvature.word import Word
+from one_relator_curvature.errors import PrecisionError
 
 import pulp as pl
 import copy
@@ -517,7 +522,11 @@ class Example:
         inequality_size = num_region_angles + num_disc_angles + 1
         regions_inequalities = []
         links_inequalities = []
-        
+
+        link_hyperplane_constant = 0
+        link_total = 0 
+        region_hyperplane_constant = num_disc_angles - 2
+
         disc_inequality = np.concatenate(
             (
                 [num_disc_angles - 2],
@@ -537,10 +546,16 @@ class Example:
             for index in region_angles:
                 inequality[index + 1] = -1
 
-            inequality[0] = len(region_angles) - 2
+            inequality_constant = len(region_angles) - 2
+            region_hyperplane_constant += inequality_constant
+            inequality[0] = inequality_constant
+
             regions_inequalities.append(inequality)
 
         for link in self.links:
+            max_link_constant = max([x["constant"] for x in link.get_equations()])
+            link_total += max_link_constant
+
             for equation in link.get_equations():
                 inequality = np.zeros(inequality_size)
                 inequality[0] = -equation["constant"]
@@ -561,14 +576,26 @@ class Example:
 
                 links_inequalities.append(inequality)
 
+        for link in self.links:
+            max_link_constant = max([x["constant"] for x in link.get_equations()])
+            link_hyperplane_constant += link_total - max_link_constant
+
         return {
+            "link_hyperplane_constant": link_hyperplane_constant,
+            "region_hyperplane_constant": region_hyperplane_constant,
             "links_inequalities": np.array(links_inequalities).tolist(),
             "regions_inequalities": np.array(regions_inequalities).tolist(),
         }
 
 
 if __name__ == "__main__":
-    example = Example("BBABAAbbaa")
-    example.run()
-    example.plot()
-    plt.show()
+    example = Example("BAbbaBaBAbbabaa")
+    example.generate_inequalities()
+    example.solve()
+
+    polytope = example.get_polytope()
+    same_hyperplane = (
+        polytope["link_hyperplane_constant"] == polytope["region_hyperplane_constant"]
+    )
+
+    print(same_hyperplane, example.curvature)

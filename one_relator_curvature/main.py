@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from inspect import getmembers, isfunction
 
-from . import parsers
-from . import cli_functions
+from one_relator_curvature import parsers
+from one_relator_curvature import cli_functions
 
 
 
